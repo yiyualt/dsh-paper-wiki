@@ -2,20 +2,38 @@ import { createHash, randomUUID } from 'node:crypto'
 import { constants } from 'node:fs'
 import { lstat, mkdir, open, readdir, rename, rm } from 'node:fs/promises'
 import { join } from 'node:path'
+import { validateContentBlocks } from './paper-content.js'
 import { MAX_PDF_BYTES } from './paper-source.js'
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/
 export const validPaperId = id => typeof id === 'string' && uuid.test(id)
 const string = (value, maximum) => typeof value === 'string' && !!value.trim() && value.length <= maximum
 
-function validExplanation(value) {
-  return value === null || value && string(value.title, 300) && string(value.summary, 6000)
-    && string(value.model, 500) && Number.isFinite(Date.parse(value.createdAt))
-    && Number.isSafeInteger(value.durationMs) && value.durationMs >= 0
-    && Array.isArray(value.chapters) && value.chapters.length > 0 && value.chapters.length <= 12
-    && new Set(value.chapters.map(chapter => chapter?.id)).size === value.chapters.length
-    && value.chapters.every(chapter => string(chapter?.id, 80) && /^[a-z][a-z0-9-]*$/.test(chapter.id)
-      && string(chapter.title, 150) && string(chapter.markdown, 80_000))
+function explanationRecord(value, paper) {
+  if (value === null) return null
+  if (!value || !string(value.title, 300) || !string(value.summary, 6000)
+    || !string(value.model, 500) || !['string', 'number'].includes(typeof value.createdAt) || !Number.isFinite(Date.parse(value.createdAt))
+    || !Number.isSafeInteger(value.durationMs) || value.durationMs < 0
+    || (value.version !== undefined && value.version !== 2)
+    || !Array.isArray(value.chapters) || !value.chapters.length || value.chapters.length > 12
+    || new Set(value.chapters.map(chapter => chapter?.id)).size !== value.chapters.length) return
+  const chapters = []
+  let hasBlocks = false
+  for (const chapter of value.chapters) {
+    if (!string(chapter?.id, 80) || !/^[a-z][a-z0-9-]*$/.test(chapter.id)
+      || !string(chapter.title, 150) || !string(chapter.markdown, 80_000)) return
+    let blocks
+    if (chapter.blocks !== undefined) {
+      try { blocks = validateContentBlocks(paper, chapter.blocks, chapter.id) }
+      catch { return }
+      hasBlocks = true
+    }
+    chapters.push({ id: chapter.id, title: chapter.title, markdown: chapter.markdown,
+      ...(blocks && { blocks }) })
+  }
+  if (value.version === 2 && !hasBlocks) return
+  return { ...(value.version === 2 && { version: 2 }), title: value.title, summary: value.summary,
+    model: value.model, createdAt: value.createdAt, durationMs: value.durationMs, chapters }
 }
 
 function record(value, id) {
@@ -26,11 +44,13 @@ function record(value, id) {
     || !value.pages.every((page, index) => page?.number === index + 1 && typeof page.text === 'string')
     || value.pages.reduce((sum, page) => sum + page.text.length, 0) > 600_000
     || !Array.isArray(value.warnings) || value.warnings.length > 20
-    || !value.warnings.every(warning => string(warning, 3000)) || !validExplanation(value.explanation)) return
+    || !value.warnings.every(warning => string(warning, 3000))) return
+  const explanation = explanationRecord(value.explanation, value)
+  if (explanation === undefined) return
   return { id, createdAt: value.createdAt, title: value.title, fileName: value.fileName,
     sha256: value.sha256, pageCount: value.pageCount,
     pages: value.pages.map(({ number, text }) => ({ number, text })),
-    warnings: value.warnings, explanation: value.explanation }
+    warnings: value.warnings, explanation }
 }
 
 async function readRegular(path, maximum) {
@@ -97,11 +117,13 @@ export function createPaperStorage(directory) {
     },
     get,
     async setExplanation(id, explanation) {
-      if (!validPaperId(id) || !explanation || !validExplanation(explanation)) throw new TypeError('Invalid paper explanation')
+      if (!validPaperId(id) || !explanation) throw new TypeError('Invalid paper explanation')
       return exclusive(id, async () => {
         const paper = await get(id)
         if (!paper) return
-        const updated = { ...paper, explanation }
+        const normalized = explanationRecord(explanation, paper)
+        if (!normalized) throw new TypeError('Invalid paper explanation')
+        const updated = { ...paper, explanation: normalized }
         const temporary = join(directoryOf(id), '.' + randomUUID() + '.tmp')
         try {
           await writePrivate(temporary, JSON.stringify(updated) + '\n')

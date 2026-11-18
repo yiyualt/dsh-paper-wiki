@@ -1,10 +1,11 @@
 /** Small deterministic PDF, independent of the PDF parser under test. */
-export function createPdf(texts, title = 'A local paper', { unicode = false, encrypted = false } = {}) {
+export function createPdf(texts, title = 'A local paper', { unicode = false, encrypted = false, wrap = false } = {}) {
   const objects = [null, '<< /Type /Catalog /Pages 2 0 R >>', '', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>']
   const kids = []
   for (const text of texts) {
     const page = objects.length
-    const stream = `BT /F1 12 Tf 72 720 Td (${text.replace(/[\\()]/g, '\\$&')}) Tj ET`
+    const lines = wrap ? text.match(/.{1,78}(?:\s+|$)|\S+/g).map(line => line.trim()) : [text]
+    const stream = 'BT /F1 12 Tf 72 720 Td ' + lines.map(line => '(' + line.replace(/[\\()]/g, '\\$&') + ') Tj 0 -18 Td').join(' ') + ' ET'
     objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents ${page + 1} 0 R >>`,
       `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`)
     kids.push(`${page} 0 R`)

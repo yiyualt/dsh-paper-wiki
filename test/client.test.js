@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import { runInNewContext } from 'node:vm'
+import { richDraft } from '../test-support/explanation-fixture.js'
+import { createPaperContentRenderer } from '../src/paper-blocks.js'
 import { createPaperGenerationProgress } from '../src/generation-progress.js'
 
 const firstId = '11111111-1111-4111-8111-111111111111'
@@ -29,7 +31,7 @@ async function fixture(respond) {
     window: { __ModuleLoader__: { load(value) { definition = value } } },
     document: { baseURI: 'http://localhost/dsh/', createElement() { const link = { click() { downloads.push({ ...link }) } }; return link } },
     URL: RuntimeURL, Intl, AbortController, AbortSignal, Blob, Date,
-    paperWikiStyles: '', createPaperGenerationProgress,
+    paperWikiStyles: '', createPaperGenerationProgress, createPaperContentRenderer,
     setTimeout(fn) { const id = ++timerId; timers.set(id, fn); return id }, clearTimeout(id) { timers.delete(id) },
     setInterval() { return 0 }, clearInterval() {},
     fetch: async (url, options = {}) => { const request = { url: new URL(url), ...options }; calls.push(request); return respond(request) },
@@ -415,5 +417,27 @@ test('a missing background job after DSH restarts stops polling and enables a fr
   await app.store.generate()
   assert.equal(attempts, 2)
   assert.equal(app.store.getSnapshot().generation.phase, 'writing')
+  app.dispose()
+})
+
+test('new teaching chapters use the content renderer and reset step state across papers and regenerated explanations', async () => {
+  const chapter = { ...richDraft().chapters[1], title: '任务与输入输出', markdown: 'Complete fallback export' }
+  const explanation = { ...explainedPaper.explanation, version: 2, chapters: [chapter] }
+  let current = { ...firstPaper, explanation }
+  const app = await fixture(request => Response.json(request.url.searchParams.has('id') ? current : { papers: [] }))
+  await app.store.openPaper(firstId)
+  let content = find(renderReader(app), node => node.type?.name === 'PaperContent')
+  assert(content, 'typed chapters use the interactive content renderer')
+  assert.equal(JSON.parse(content.props.chapter.blocks[1].steps[2].code).product_id, 'p1')
+  const originalKey = content.props.key
+  current = { ...secondPaper, explanation }
+  await app.store.openPaper(secondId)
+  content = find(renderReader(app), node => node.type?.name === 'PaperContent')
+  assert.notEqual(content.props.key, originalKey, 'same chapter of another paper gets fresh interaction state')
+  const secondKey = content.props.key
+  current = { ...secondPaper, explanation: { ...explanation, createdAt: '2026-11-19T01:01:00Z' } }
+  await app.store.openPaper(secondId)
+  content = find(renderReader(app), node => node.type?.name === 'PaperContent')
+  assert.notEqual(content.props.key, secondKey, 'regeneration also resets the selected step')
   app.dispose()
 })

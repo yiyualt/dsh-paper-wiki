@@ -13,6 +13,19 @@ const paper = () => ({ id: randomUUID(), createdAt: new Date().toISOString(), ti
 const explanation = () => ({ title: 'Research paper', summary: 'The paper investigates a stated research question.',
   chapters: [{ id: 'overview', title: '研究问题', markdown: 'The author reports a result. [第 1 页](https://example.invalid)' }],
   model: 'fixture-model', createdAt: new Date().toISOString(), durationMs: 20 })
+const references = () => [{ page: 1, quote: 'The original paper text.' }]
+const richExplanation = () => ({ ...explanation(), version: 2, chapters: [
+  { id: 'overview', title: '论文做了什么', markdown: '论文说明。（第 1 页）', blocks: [
+    { type: 'paragraph', text: '论文说明。', references: references() },
+  ] },
+  { id: 'task', title: '任务与输入输出', markdown: '构造示例（非论文原始样本）', blocks: [
+    { type: 'example', title: '教学示例', mode: 'illustrative', references: references(), steps: [
+      { label: '输入', language: 'json', code: '{"query":"sample"}', explanation: '构造的输入。' },
+      { label: '输出', language: 'json', code: '{"items":["one"]}', explanation: '构造的输出。' },
+    ] },
+  ] },
+  { id: 'analysis', title: '结果分析与局限', markdown: '当前可提取的论文文字未提供足够依据，暂不作结论。' },
+] })
 
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'dsh-paper-storage-'))
@@ -77,4 +90,71 @@ test('serializes explanation update and removal without recreating deleted paper
   assert.equal(await storage.setExplanation(record.id, explanation()), undefined)
   assert.equal(await storage.remove(record.id), true)
   assert.deepEqual(await storage.list(), [])
+})
+
+test('persists version 2 teaching blocks and fallback Markdown across fresh storage instances', async t => {
+  const { root, storage } = await fixture(t)
+  const record = paper(), rich = richExplanation()
+  await storage.save(record, bytes)
+  const updated = await storage.setExplanation(record.id, rich)
+  assert.deepEqual(updated.explanation, rich)
+  const reopened = createPaperStorage(join(root, 'papers'))
+  assert.deepEqual((await reopened.get(record.id)).explanation, rich)
+  assert.deepEqual(JSON.parse(await readFile(join(root, 'papers', record.id, 'paper.json'), 'utf8')).explanation, rich)
+  assert.equal((await reopened.list())[0].explained, true)
+  assert.deepEqual(await reopened.getPdf(record.id), bytes)
+
+  const second = { ...paper(), explanation: rich }
+  await reopened.save(second, bytes)
+  assert.deepEqual((await storage.get(second.id)).explanation, rich)
+})
+
+test('keeps unversioned Markdown explanations readable and updatable without teaching blocks', async t => {
+  const { root, storage } = await fixture(t)
+  const legacy = explanation(), record = { ...paper(), explanation: legacy }
+  await storage.save(record, bytes)
+  const reopened = createPaperStorage(join(root, 'papers'))
+  assert.deepEqual((await reopened.get(record.id)).explanation, legacy)
+  assert.equal('version' in (await reopened.get(record.id)).explanation, false)
+  const revised = { ...legacy, summary: 'A revised legacy explanation.' }
+  await reopened.setExplanation(record.id, revised)
+  assert.deepEqual((await storage.get(record.id)).explanation, revised)
+})
+
+test('rejects bad teaching content before replacing a saved explanation or writing a new archive', async t => {
+  const { storage } = await fixture(t)
+  const record = { ...paper(), explanation: explanation() }
+  await storage.save(record, bytes)
+  const invalid = []
+  const missingPage = richExplanation(); missingPage.chapters[0].blocks[0].references[0].page = 2; invalid.push(missingPage)
+  const inventedQuote = richExplanation(); inventedQuote.chapters[0].blocks[0].references[0].quote = 'An invented sentence from another paper.'; invalid.push(inventedQuote)
+  const empty = richExplanation(); empty.chapters[1].blocks = []; invalid.push(empty)
+  const malformed = richExplanation(); malformed.chapters[1].blocks[0].steps = null; invalid.push(malformed)
+  const noBlocks = { ...explanation(), version: 2 }; invalid.push(noBlocks)
+  const unversionedBadBlocks = richExplanation(); delete unversionedBadBlocks.version; unversionedBadBlocks.chapters[0].blocks = [null]; invalid.push(unversionedBadBlocks)
+  for (const value of invalid) {
+    await assert.rejects(storage.setExplanation(record.id, value), TypeError)
+    assert.deepEqual((await storage.get(record.id)).explanation, record.explanation)
+    const fresh = { ...paper(), explanation: value }
+    await assert.rejects(storage.save(fresh, bytes), TypeError)
+    assert.equal(await storage.get(fresh.id), undefined)
+  }
+})
+
+test('ignores malformed new block archives on read without exposing invalid citations or breaking the library', async t => {
+  const { root, storage } = await fixture(t)
+  const keep = paper()
+  await storage.save(keep, bytes)
+  for (const damage of [
+    value => { value.chapters[0].blocks[0].references[0].page = 99 },
+    value => { value.chapters[0].blocks = [null] },
+    value => { value.chapters[1].blocks[0].steps[0].code = '{broken' },
+  ]) {
+    const record = { ...paper(), explanation: richExplanation() }
+    await storage.save(record, bytes)
+    damage(record.explanation)
+    await writeFile(join(root, 'papers', record.id, 'paper.json'), JSON.stringify(record))
+    assert.equal(await storage.get(record.id), undefined)
+  }
+  assert.deepEqual((await storage.list()).map(item => item.id), [keep.id])
 })

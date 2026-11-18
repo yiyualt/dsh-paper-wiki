@@ -5,6 +5,7 @@ window.__ModuleLoader__.load({
     const primitives = require('@deepseek-ai/dsh-client-ui-primitives')
     const { Button, MarkdownText, Modal } = primitives
     const { createElement: h, useEffect, useId, useRef, useSyncExternalStore } = React
+    const PaperContent = createPaperContentRenderer(React, primitives)
     const GenerationProgress = createPaperGenerationProgress(React, primitives)
     const panelId = 'dsh-paper-wiki'
     const uuid = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i
@@ -27,7 +28,8 @@ window.__ModuleLoader__.load({
       if (!item) return null
       const explanation = value.explanation
       if (explanation && (!Array.isArray(explanation.chapters) || !explanation.chapters.length
-        || explanation.chapters.some(chapter => typeof chapter.id !== 'string' || typeof chapter.title !== 'string' || typeof chapter.markdown !== 'string'))) return null
+        || explanation.chapters.some(chapter => typeof chapter.id !== 'string' || typeof chapter.title !== 'string' || typeof chapter.markdown !== 'string'
+          || chapter.blocks !== undefined && (!Array.isArray(chapter.blocks) || !chapter.blocks.length || chapter.blocks.length > 10 || chapter.blocks.some(block => !block || !['paragraph', 'example', 'flow', 'table', 'chart'].includes(block.type)))))) return null
       return { ...item, warnings: Array.isArray(value.warnings) ? value.warnings.filter(item => typeof item === 'string') : [], explanation }
     }
     function validJob(value) {
@@ -344,7 +346,9 @@ window.__ModuleLoader__.load({
             h('header', { className: 'dsh-paper-wiki-article-header' }, h('h2', { className: 'dsh-paper-wiki-article-title' }, chapter.title),
               h('div', { className: 'dsh-paper-wiki-meta' }, h('span', null, '中文讲解'),
                 explanation.model && h('span', null, explanation.model), explanation.createdAt && h('time', { dateTime: explanation.createdAt }, dateFormat.format(new Date(explanation.createdAt))))),
-            h('div', { className: 'dsh-paper-wiki-prose' }, h(MarkdownText, { text: sourceMarkdown(chapter.markdown, paper), omitHtml: true, labels }))))
+            h('div', { className: 'dsh-paper-wiki-prose' }, chapter.blocks
+              ? h(PaperContent, { key: paper.id + '-' + explanation.createdAt + '-' + chapter.id, chapter, labels })
+              : h(MarkdownText, { text: sourceMarkdown(chapter.markdown, paper), omitHtml: true, labels }))))
           : h('div', { className: 'dsh-paper-wiki-explanation-empty' },
             h(Button, { variant: 'primary', disabled: state.importing || state.generating || active, onClick: () => void store.generate() }, '生成讲解')))
 

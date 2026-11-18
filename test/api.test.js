@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { test } from 'node:test'
 import { apply } from '../index.js'
-import { chapterDefinitions } from '../src/paper-explanation.js'
+import { evidenceTexts, richDraft } from '../test-support/explanation-fixture.js'
 import { createPdf } from './fixtures/pdf.mjs'
 
 async function fixture(t, llm) {
@@ -26,16 +26,13 @@ async function fixture(t, llm) {
   }
   const post = (path, body) => request(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
   const upload = () => request('papers', { method: 'POST', headers: { 'content-type': 'application/pdf', 'x-paper-filename': encodeURIComponent('本地论文.pdf') },
-    body: createPdf(['We compare two fixed models on the same inputs.', 'The study is limited to English evaluation tasks.']) })
+    body: createPdf(evidenceTexts, 'Self-authored fixture', { wrap: true }) })
   return { directory, request, post, upload, routes, stop: () => cleanup.forEach(dispose => dispose()) }
 }
 
 function goodModel() {
   return { async *stream({ system }) {
-    const output = system.includes('事实审核员') ? { approved: true, issues: [] } : {
-      chapters: chapterDefinitions.map(({ id }) => ({ id, paragraphs: [{ text: '作者比较了两个固定模型，并在同样的输入上评估它们。',
-        references: [{ page: 1, quote: 'We compare two fixed models' }] }] })),
-    }
+    const output = system.includes('事实审核员') ? { approved: true, issues: [] } : richDraft()
     yield { type: 'text-delta', text: JSON.stringify(output) }
     yield { type: 'finish', reason: { kind: 'stop' } }
   } }
@@ -57,7 +54,7 @@ test('import keeps source private, then manual generation persists reviewed expl
   const paper = await imported.json()
   assert.equal(paper.fileName, '本地论文.pdf')
   assert.equal(paper.explanation, null)
-  assert.equal(paper.pageCount, 2)
+  assert.equal(paper.pageCount, evidenceTexts.length)
   assert.equal('pages' in paper, false, 'public import response omits extracted source text')
   assert.equal(routes.has('/api/dsh-paper-wiki/pdf'), false, 'no original PDF display endpoint is registered')
   assert.equal((await (await request('generation')).json()).job, null, 'import does not start a generation')
@@ -68,8 +65,11 @@ test('import keeps source private, then manual generation persists reviewed expl
   const { job } = await started.json()
   assert.equal((await terminal(request, job.id)).phase, 'completed')
   const reopened = await (await request('papers?id=' + paper.id)).json()
-  assert.equal(reopened.explanation.chapters.length, 5)
+  assert.equal(reopened.explanation.chapters.length, 7)
   assert.equal(reopened.explanation.model, 'test-model')
+  assert.equal(reopened.explanation.version, 2)
+  assert.equal(reopened.explanation.chapters[1].blocks[1].type, 'example')
+  assert.equal(reopened.explanation.chapters[5].blocks[1].data[1].value, 80)
   assert.match(reopened.explanation.chapters[0].markdown, /（第 1 页）/)
   assert.doesNotMatch(reopened.explanation.chapters[0].markdown, /https?:|source\?/)
   assert.equal('pages' in reopened, false)
