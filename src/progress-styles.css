@@ -1,0 +1,196 @@
+.dsh-paper-wiki-generation {
+  position: relative;
+  padding: clamp(18px, 4cqi, 34px);
+  border: 1px solid var(--wiki-accent-line);
+  border-radius: 18px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--wiki-accent) 8%, var(--wiki-paper)), var(--wiki-paper) 65%);
+  box-shadow: 0 2px 5px rgb(16 25 56 / 4%);
+}
+
+.dsh-paper-wiki-generation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dsh-paper-wiki-generation-header > div:first-child {
+  min-width: 0;
+}
+
+.dsh-paper-wiki-generation-repo {
+  margin: 0 0 6px;
+  color: var(--wiki-accent-ink);
+  font-family: var(--ds-font-family-code);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.dsh-paper-wiki-generation-header h2 {
+  margin: 0;
+  color: var(--wiki-ink);
+  font-size: clamp(20px, 4.3cqi, 30px);
+  font-weight: 680;
+  line-height: 1.25;
+}
+
+.dsh-paper-wiki-clock {
+  display: grid;
+  flex: none;
+  gap: 2px;
+  min-inline-size: 84px;
+  padding: 8px 12px;
+  border: 1px solid var(--wiki-accent-line);
+  border-radius: 12px;
+  background: var(--wiki-paper);
+  color: var(--wiki-muted);
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.dsh-paper-wiki-clock time {
+  color: var(--wiki-accent-ink);
+  font-family: var(--ds-font-family-code);
+  font-size: clamp(20px, 4.4cqi, 26px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.dsh-paper-wiki-progressbar {
+  position: relative;
+  block-size: 10px;
+  margin-block-start: 26px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--wiki-accent) 17%, var(--wiki-paper));
+}
+
+.dsh-paper-wiki-progressbar::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inline-size: 36%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--wiki-accent-ink), var(--wiki-accent));
+  animation: dsh-paper-wiki-progress 1.9s ease-in-out infinite alternate;
+}
+
+@keyframes dsh-paper-wiki-progress {
+  from { transform: translateX(0); }
+  to { transform: translateX(178%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsh-paper-wiki-progressbar::before {
+    inline-size: 100%;
+    animation: none;
+    background: repeating-linear-gradient(135deg, var(--wiki-accent) 0 10px, transparent 10px 20px);
+  }
+}
+
+.dsh-paper-wiki-generation-stages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 2cqi, 18px);
+  margin: 13px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dsh-paper-wiki-generation-stages li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--wiki-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.dsh-paper-wiki-stage-marker {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 16px;
+  block-size: 16px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.55;
+}
+
+.dsh-paper-wiki-generation-stages li[data-state='done'] .dsh-paper-wiki-stage-marker {
+  border-color: transparent;
+  background: var(--wiki-accent-fill);
+  color: var(--wiki-accent-ink);
+  opacity: 1;
+}
+
+.dsh-paper-wiki-generation-stages li[data-state='active'] {
+  color: var(--wiki-accent-ink);
+  font-weight: 700;
+}
+
+.dsh-paper-wiki-generation-stages li[data-state='active'] .dsh-paper-wiki-stage-marker {
+  border: 5px solid var(--wiki-accent);
+  opacity: 1;
+}
+
+.dsh-paper-wiki-generation-detail,
+.dsh-paper-wiki-generation-background {
+  margin: 19px 0 0;
+  color: var(--wiki-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.dsh-paper-wiki-generation-background {
+  margin-block-start: 4px;
+  font-size: 12px;
+}
+
+.dsh-paper-wiki-generation-done {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--wiki-accent-line);
+  border-radius: 12px;
+  background: var(--wiki-accent-fill);
+}
+
+.dsh-paper-wiki-generation-done p {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  min-width: 0;
+  margin: 0;
+  color: var(--wiki-accent-ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.dsh-paper-wiki-generation-done p span {
+  color: var(--wiki-muted);
+  font-size: 12px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.dsh-paper-wiki-generation-done button {
+  flex: none;
+}
+
+.dsh-paper-wiki-generation-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-start: 16px;
+}
+
+.dsh-paper-wiki-generation-done[data-state='failed'] p {
+  color: var(--dsw-alias-state-error-primary);
+}

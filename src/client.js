@@ -2,8 +2,10 @@ window.__ModuleLoader__.load({
   id: 'dsh-paper-wiki',
   factory(require) {
     const React = require('react')
-    const { Button, MarkdownText, Modal } = require('@deepseek-ai/dsh-client-ui-primitives')
-    const { createElement: h, useEffect, useId, useRef, useState, useSyncExternalStore } = React
+    const primitives = require('@deepseek-ai/dsh-client-ui-primitives')
+    const { Button, MarkdownText, Modal } = primitives
+    const { createElement: h, useEffect, useId, useRef, useSyncExternalStore } = React
+    const GenerationProgress = createPaperGenerationProgress(React, primitives)
     const panelId = 'dsh-paper-wiki'
     const uuid = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i
     const terminal = new Set(['completed', 'failed', 'cancelled'])
@@ -39,10 +41,11 @@ window.__ModuleLoader__.load({
     }
     function createPaperStore() {
       let snapshot = { papers: [], historyStatus: 'idle', error: '', result: null,
-        chapter: 0, formOpen: false, file: null, paperPath: '', importing: false,
+        chapter: 0, formOpen: false, file: null, preparing: null, importing: false,
         openingId: null, deletion: null, generation: null, offline: false, generating: false }
       let disposed = false, initialized = false, openRevision = 0, listRequest, openRequest, importRequest, pollRequest, deleteRequest
       let pollTimer, pollingId, generationRequest
+      let creationPaperId, cancelAfterCreateId
       const listeners = new Set()
       const controllers = new Set()
       const controller = () => { const value = new AbortController(); controllers.add(value); return value }
@@ -102,6 +105,11 @@ window.__ModuleLoader__.load({
           return
         }
         if (pollingId !== job.id || restore) { stopPolling(); pollingId = job.id; schedulePoll(job.id) }
+        if (cancelAfterCreateId === job.paperId) {
+          cancelAfterCreateId = null
+          update({ preparing: null })
+          await cancelGeneration()
+        }
       }
       function schedulePoll(id) {
         pollTimer = setTimeout(async () => {
@@ -122,51 +130,71 @@ window.__ModuleLoader__.load({
           }
         }, 1500)
       }
-      async function recoverGeneration() {
+      async function recoverGeneration(includeFinished = false) {
         const request = controller()
         try {
           const data = await readResponse(await fetch(api('generation'), { credentials: 'same-origin', signal: request.signal }))
-          if (!request.signal.aborted && !generationRequest && validJob(data?.job)) await acceptJob(data.job, true)
+          if (!request.signal.aborted && !generationRequest && validJob(data?.job)
+            && (includeFinished || !terminal.has(data.job.phase))) await acceptJob(data.job, true)
         } catch { /* The library remains usable if no generation can be recovered. */ }
         finally { controllers.delete(request) }
       }
-      async function importPaper() {
-        if (disposed || snapshot.importing || (!snapshot.file && !snapshot.paperPath.trim())) return
+      async function createWiki() {
+        if (disposed || snapshot.importing || snapshot.generating || !snapshot.file
+          || snapshot.generation && !terminal.has(snapshot.generation.phase)) return
+        const file = snapshot.file
+        creationPaperId = cancelAfterCreateId = null
         const request = importRequest = controller()
         const revision = ++openRevision
         openRequest?.abort()
-        update({ importing: true, error: '' })
+        update({ importing: true, formOpen: false, error: '', preparing: {
+          id: 'preparing', phase: 'reading', fileName: file.name, elapsedMs: 0, receivedAt: Date.now(),
+        } })
         try {
-          const file = snapshot.file
-          if (file && (file.size > 30 * 1024 * 1024 || !/\.pdf$/i.test(file.name))) throw new Error('请选择不超过 30 MB 的 PDF 文件。')
+          if (file.size > 30 * 1024 * 1024 || !/\.pdf$/i.test(file.name)) throw new Error('请选择不超过 30 MB 的 PDF 文件。')
           const response = await fetch(api('papers'), { method: 'POST', credentials: 'same-origin', signal: request.signal,
-            headers: file ? { 'content-type': 'application/pdf', 'x-paper-filename': encodeURIComponent(file.name) } : { 'content-type': 'application/json' },
-            body: file || JSON.stringify({ paperPath: snapshot.paperPath.trim() }) })
+            headers: { 'content-type': 'application/pdf', 'x-paper-filename': encodeURIComponent(file.name) }, body: file })
           const result = paperRecord(await readResponse(response))
           if (!result) throw new Error('导入结果不完整，请重试。')
           if (!request.signal.aborted) {
+            creationPaperId = result.id
             listRequest?.abort()
-            update({ papers: merge([metadata(result)]), historyStatus: 'ready', file: null, paperPath: '',
+            update({ papers: merge([metadata(result)]), historyStatus: 'ready', file: null,
               ...(revision === openRevision ? { result, chapter: 0, formOpen: false } : {}) })
+            await generate(result.id)
           }
-        } catch (error) { if (!request.signal.aborted) update({ error: error.message || '无法导入论文，请重试。' }) }
-        finally { controllers.delete(request); if (importRequest === request) { importRequest = null; update({ importing: false }) } }
+        } catch (error) {
+          if (!request.signal.aborted) update({ error: error.message || '无法读取论文，请重试。', ...(revision === openRevision && { formOpen: true }) })
+        } finally {
+          controllers.delete(request)
+          if (importRequest === request) {
+            importRequest = null
+            update({ importing: false, preparing: null, ...(request.signal.aborted && revision === openRevision && { formOpen: true }) })
+          }
+        }
       }
-      async function generate() {
-        const paperId = snapshot.result?.id
+      async function generate(paperId = snapshot.result?.id) {
         if (disposed || !uuid.test(paperId) || snapshot.generating || snapshot.generation && !terminal.has(snapshot.generation.phase)) return
+        if (!snapshot.importing) cancelAfterCreateId = null
         const request = generationRequest = controller()
         update({ generating: true, error: '' })
         try {
           const response = await fetch(api('generation'), { method: 'POST', credentials: 'same-origin', signal: request.signal,
             headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: paperId }) })
           const data = await response.json().catch(() => null)
-          if ((response.ok || response.status === 409) && validJob(data?.job)) await acceptJob(data.job, true)
-          else throw new Error(data?.error || '无法开始讲解，请重试。')
-        } catch (error) { if (!request.signal.aborted) { update({ error: error.message }); void recoverGeneration() } }
+          if ((response.ok || response.status === 409) && validJob(data?.job)) {
+            await acceptJob(data.job, true)
+            if (data.job.paperId !== paperId) update({ error: '已有论文正在生成，请稍后重试。' })
+          } else throw new Error(data?.error || '无法开始讲解，请重试。')
+        } catch (error) { if (!request.signal.aborted) { update({ error: error.message }); void recoverGeneration(true) } }
         finally { controllers.delete(request); if (generationRequest === request) { generationRequest = null; update({ generating: false }) } }
       }
       async function cancelGeneration() {
+        if (snapshot.preparing && importRequest) {
+          cancelAfterCreateId = creationPaperId
+          importRequest.abort()
+          return
+        }
         if (!snapshot.generation || terminal.has(snapshot.generation.phase)) return
         const request = controller()
         try {
@@ -201,10 +229,10 @@ window.__ModuleLoader__.load({
         subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener) },
         getSnapshot: () => snapshot,
         initialize() { if (!initialized && !disposed) { initialized = true; void loadPapers(); void recoverGeneration() } },
-        loadPapers, openPaper, importPaper, generate, cancelGeneration, deletePaper,
-        setFile(file) { update({ file: file || null, paperPath: '', error: '' }) },
-        setPath(paperPath) { update({ paperPath, file: null, error: '' }) },
-        setFormOpen(formOpen) { update({ formOpen, error: '' }) },
+        loadPapers, openPaper, createWiki, generate, cancelGeneration, deletePaper,
+        setFile(file) { update({ file: file || null, error: '' }) },
+        setFormOpen(formOpen) { update({ formOpen, error: '',
+          ...(formOpen && snapshot.generation && terminal.has(snapshot.generation.phase) && { generation: null }) }) },
         selectChapter(chapter) { if (snapshot.result?.explanation?.chapters[chapter]) update({ chapter }) },
         returnToLibrary() { ++openRevision; openRequest?.abort(); update({ result: null, openingId: null, formOpen: false, error: '' }) },
         requestDelete(item) { update({ deletion: { item, pending: false, error: '' } }) },
@@ -220,44 +248,19 @@ window.__ModuleLoader__.load({
       return h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, 'aria-hidden': true },
         h('path', { d: kind === 'trash' ? 'M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7' : kind === 'plus' ? 'M12 5v14M5 12h14' : 'm9 5 7 7-7 7', strokeLinecap: 'round', strokeLinejoin: 'round' }))
     }
-    function duration(ms) { const seconds = Math.floor((ms || 0) / 1000); return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0') }
-    function GenerationProgress({ generation, offline, store }) {
-      const [now, setNow] = useState(Date.now)
-      useEffect(() => { if (terminal.has(generation.phase)) return; const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer) }, [generation.id, generation.phase])
-      const stages = [['reading', '读取论文'], ['writing', '撰写讲解'], ['reviewing', '核对引用'], ['saving', '保存讲解']]
-      const status = { reading: '正在读取论文', writing: '正在撰写论文讲解', reviewing: '正在核对论文引用', saving: '正在保存讲解', completed: '论文讲解已保存', failed: '本次讲解未完成', cancelled: '已取消讲解' }
-      const active = !terminal.has(generation.phase)
-      return h('section', { className: 'dsh-paper-wiki-generation', 'aria-label': '讲解进度' },
-        h('div', { className: 'dsh-paper-wiki-generation-header' }, h('h2', { role: 'status' }, status[generation.phase]),
-          h('span', { className: 'dsh-paper-wiki-clock' }, '已耗时 ', duration(generation.elapsedMs + (active ? Math.max(0, now - generation.receivedAt) : 0)))),
-        active && h('div', { className: 'dsh-paper-wiki-progressbar', role: 'progressbar', 'aria-label': status[generation.phase] }),
-        active && h('ol', { className: 'dsh-paper-wiki-generation-stages' }, stages.map(([phase, label], index) => h('li', { key: phase,
-          'data-active': generation.phase === phase || undefined, 'data-done': index < stages.findIndex(item => item[0] === generation.phase) || undefined }, label))),
-        generation.error && h('p', { role: 'alert' }, generation.error),
-        offline && h('p', { role: 'status' }, '暂时无法连接 DSH，正在尝试恢复进度。'),
-        h('div', { className: 'dsh-paper-wiki-generation-actions' }, active
-          ? h(Button, { size: 'sm', variant: 'outline', onClick: () => void store.cancelGeneration() }, '取消讲解')
-          : generation.phase === 'completed' && h(Button, { size: 'sm', variant: 'outline', onClick: () => void store.openPaper(generation.paperId) }, '打开讲解')))
-    }
     function ImportForm({ store, state, formId }) {
-      const fileId = useId(), pathId = useId()
-      const titleId = useId(), heading = useRef(null)
-      const busy = state.importing
+      const fileInput = useRef(null), heading = useRef(null), titleId = useId()
+      const busy = state.importing || state.generating || state.generation && !terminal.has(state.generation.phase)
       useEffect(() => { heading.current?.focus() }, [])
       return h('section', { id: formId, className: 'dsh-paper-wiki-form-card', 'aria-labelledby': titleId },
         h('h2', { id: titleId, ref: heading, tabIndex: -1, className: 'dsh-paper-wiki-form-title' }, '新建 Wiki'),
-        h('form', { className: 'dsh-paper-wiki-form', onSubmit: event => { event.preventDefault(); void store.importPaper() } },
-          h('label', { className: 'dsh-paper-wiki-upload', htmlFor: fileId }, h(PaperIcon, { size: 28 }),
-            h('strong', null, state.file ? state.file.name : '选择 PDF 文件'), h('span', null, '支持含文本的 PDF · 最大 30 MB'),
-            h('input', { id: fileId, type: 'file', name: 'paperFile', accept: '.pdf,application/pdf', disabled: busy,
-              onChange: event => { store.setFile(event.target.files?.[0]); event.target.value = '' } })),
-          h('details', { className: 'dsh-paper-wiki-path-option' }, h('summary', null, '从 DSH 所在电脑的路径导入'),
-            h('label', { className: 'dsh-paper-wiki-field', htmlFor: pathId }, h('span', null, 'PDF 绝对路径'),
-              h('input', { id: pathId, name: 'paperPath', type: 'text', autoComplete: 'off', spellCheck: false,
-                value: state.paperPath, disabled: busy, placeholder: '/path/to/paper.pdf', onChange: event => store.setPath(event.target.value) }))),
-          h('div', { className: 'dsh-paper-wiki-form-footer' }, h(Button, { type: 'submit', variant: 'primary',
-            disabled: busy || (!state.file && !state.paperPath.trim()) }, state.importing ? '正在读取论文…' : '导入论文'),
-            h('p', { className: 'dsh-paper-wiki-hint' }, '生成讲解时，论文文本会发送给当前配置的模型。'))))
+        h('form', { className: 'dsh-paper-wiki-form', onSubmit: event => { event.preventDefault(); void store.createWiki() } },
+          h('input', { ref: fileInput, type: 'file', hidden: true, accept: '.pdf,application/pdf', 'aria-label': '论文文件',
+            onChange: event => { const file = event.target.files?.[0]; if (file) store.setFile(file); event.target.value = '' } }),
+          h('div', { className: 'dsh-paper-wiki-file-field' },
+            h(Button, { type: 'button', variant: 'outline', disabled: busy, onClick: () => fileInput.current?.click() }, '选择论文'),
+            state.file && h('span', { title: state.file.name }, state.file.name)),
+          h(Button, { type: 'submit', variant: 'primary', disabled: busy || !state.file }, '生成讲解')))
     }
     function PaperLibrary({ store, state }) {
       const titleId = useId()
@@ -327,13 +330,12 @@ window.__ModuleLoader__.load({
       const chapter = explanation?.chapters[state.chapter]
       const heading = useRef(null)
       const active = state.generation && !terminal.has(state.generation.phase)
-      const pending = state.generating || active && state.generation.paperId === paper.id
       useEffect(() => { heading.current?.focus({ preventScroll: true }) }, [paper.id, state.chapter])
       return h('div', { className: 'dsh-paper-wiki-reader' },
         h('div', { className: 'dsh-paper-wiki-reader-heading' }, h('div', null, h('p', { className: 'dsh-paper-wiki-eyebrow' }, '本地论文 · ' + paper.pageCount + ' 页'),
           h('h1', { ref: heading, tabIndex: -1 }, paper.title), h('p', { className: 'dsh-paper-wiki-file-name' }, paper.fileName)),
           explanation && h('div', { className: 'dsh-paper-wiki-actions' }, h(Button, { size: 'sm', variant: 'outline', onClick: () => downloadMarkdown(paper) }, '导出讲解'),
-            h(Button, { size: 'sm', variant: 'primary', disabled: state.generating || active,
+            h(Button, { size: 'sm', variant: 'primary', disabled: state.importing || state.generating || active,
               onClick: () => void store.generate() }, state.generating ? '正在提交…' : '重新讲解'))),
         paper.warnings.length > 0 && h('div', { className: 'dsh-paper-wiki-warning', role: 'note' }, paper.warnings.map((warning, index) => h('p', { key: index }, warning))),
         explanation ? h('div', { className: 'dsh-paper-wiki-columns' }, h('aside', { className: 'dsh-paper-wiki-sidebar' }, h(ChapterDirectory, { state, store })),
@@ -342,10 +344,9 @@ window.__ModuleLoader__.load({
               h('div', { className: 'dsh-paper-wiki-meta' }, h('span', null, '中文讲解'),
                 explanation.model && h('span', null, explanation.model), explanation.createdAt && h('time', { dateTime: explanation.createdAt }, dateFormat.format(new Date(explanation.createdAt))))),
             h('div', { className: 'dsh-paper-wiki-prose' }, h(MarkdownText, { text: sourceMarkdown(chapter.markdown, paper), omitHtml: true, labels }))))
-          : h('section', { className: 'dsh-paper-wiki-explanation-empty', 'aria-label': '论文讲解' }, h(PaperIcon, { size: 30 }),
-            h('h2', null, pending ? '正在生成论文讲解' : '论文已导入'),
-            h('p', null, pending ? '完成后将在这里显示按章节组织的中文讲解。' : '点击生成讲解，了解研究问题、方法、实验结果与局限。'),
-            h(Button, { variant: 'primary', disabled: state.generating || active, onClick: () => void store.generate() }, pending ? '正在生成…' : '生成讲解')))
+          : h('div', { className: 'dsh-paper-wiki-explanation-empty' },
+            h(Button, { variant: 'primary', disabled: state.importing || state.generating || active, onClick: () => void store.generate() }, '生成讲解')))
+
     }
     function DeleteDialog({ store, deletion }) {
       return h(Modal, { open: true, title: '删除论文？', closeLabel: '关闭', onClose: store.cancelDelete,
@@ -360,7 +361,10 @@ window.__ModuleLoader__.load({
       useEffect(() => store.initialize(), [store])
       useEffect(() => { if (page.current) page.current.scrollTop = 0 }, [state.result?.id, state.chapter])
       const active = state.generation && !terminal.has(state.generation.phase)
-      const showProgress = state.generation && (active || !state.result || state.generation.paperId === state.result.id && state.generation.phase !== 'completed')
+      const generation = state.preparing || state.generation
+      const showProgress = generation && (state.preparing || active || !state.result || generation.paperId === state.result.id && generation.phase !== 'completed')
+      const progressOwnsResult = !state.result?.explanation && showProgress && (state.preparing || generation.paperId === state.result?.id)
+      const title = generation && (generation.fileName || state.papers.find(paper => paper.id === generation.paperId)?.title)
       return h('section', { className: 'dsh-paper-wiki-page', 'aria-label': '论文百科', ref: page, 'data-reading': state.result ? '' : undefined },
         h('style', null, paperWikiStyles), state.deletion && h(DeleteDialog, { store, deletion: state.deletion }),
         h('div', { className: 'dsh-paper-wiki-shell' },
@@ -368,14 +372,14 @@ window.__ModuleLoader__.load({
             ? h('nav', { className: 'dsh-paper-wiki-breadcrumb', 'aria-label': '当前位置' }, h('button', { type: 'button', onClick: store.returnToLibrary }, '论文库'),
               h(Glyph, { kind: 'chevron' }), h('span', { title: state.result.title }, state.result.title))
             : h('h1', { className: 'dsh-paper-wiki-brand' }, h('span', { className: 'dsh-paper-wiki-brand-icon' }, h(PaperIcon, { size: 20 })), '论文库'),
-            !state.result && h('div', { className: 'dsh-paper-wiki-actions' }, h(Button, { size: 'sm', variant: state.formOpen ? 'outline' : 'primary', disabled: state.importing,
+            !state.result && h('div', { className: 'dsh-paper-wiki-actions' }, h(Button, { size: 'sm', variant: state.formOpen ? 'outline' : 'primary', disabled: state.importing || state.generating || active,
               icon: state.formOpen ? undefined : h(Glyph, { kind: 'plus' }), 'aria-expanded': state.formOpen,
               'aria-controls': state.formOpen ? formId : undefined,
               onClick: () => store.setFormOpen(!state.formOpen) }, state.formOpen ? '取消新建' : '新建 Wiki'))),
           h('div', { className: state.result ? 'dsh-paper-wiki-reading' : 'dsh-paper-wiki-library' },
-            showProgress && h(GenerationProgress, { generation: state.generation, offline: state.offline, store }),
+            showProgress && h(GenerationProgress, { generation: { ...generation, title }, offline: state.offline, store }),
             state.error && h('p', { role: 'alert', className: 'dsh-paper-wiki-feedback' }, state.error),
-            state.result ? h(PaperReader, { state, store }) : h(React.Fragment, null,
+            state.result ? !progressOwnsResult && h(PaperReader, { state, store }) : h(React.Fragment, null,
               state.formOpen && h(ImportForm, { store, state, formId }), h(PaperLibrary, { store, state })))))
     }
     return {
