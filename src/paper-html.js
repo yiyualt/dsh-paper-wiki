@@ -1,4 +1,5 @@
 import { evaluatePaperCalculation } from './paper-calculation.js'
+import { createPaperGuideHtml } from './paper-guide-html.js'
 
 const list = value => Array.isArray(value) ? value : []
 const text = value => typeof value === 'string' ? value : ''
@@ -255,7 +256,8 @@ function renderBlock(block, id, calculations) {
 }
 
 /** Export explanation fields only; PDF pages and source quotations never enter the document or script data. */
-export function createPaperHtml(paper, { styles = '', behavior = '' } = {}) {
+export function createPaperHtml(paper, { styles = '', behavior = '', guideStyles = '', guideBehavior = '' } = {}) {
+  if (paper?.explanation?.version === 4) return createPaperGuideHtml(paper, { styles: guideStyles, behavior: guideBehavior })
   const explanation = paper?.explanation
   if (!explanation || !Array.isArray(explanation.chapters) || !explanation.chapters.length) throw new TypeError('Paper explanation is required')
   const title = text(explanation.title) || text(paper.title) || '论文讲解', calculations = []

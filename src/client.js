@@ -27,6 +27,8 @@ window.__ModuleLoader__.load({
       const item = metadata(value)
       if (!item) return null
       const explanation = value.explanation
+      if (explanation?.version === 4 && (!explanation.caseStudy || !Array.isArray(explanation.caseStudy.steps)
+        || explanation.caseStudy.steps.length < 2 || explanation.caseStudy.steps.length > 6)) return null
       if (explanation && (!Array.isArray(explanation.chapters) || !explanation.chapters.length
         || explanation.chapters.some(chapter => typeof chapter.id !== 'string' || typeof chapter.title !== 'string' || typeof chapter.markdown !== 'string'
           || chapter.blocks !== undefined && (!Array.isArray(chapter.blocks) || !chapter.blocks.length || chapter.blocks.length > 10 || chapter.blocks.some(block => !block || !['paragraph', 'example', 'flow', 'table', 'chart', 'terms', 'diagram', 'evidence', 'calculation'].includes(block.type)))))) return null
@@ -319,7 +321,8 @@ window.__ModuleLoader__.load({
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
     function downloadHtml(paper) {
-      const html = createPaperHtml(paper, { styles: paperExportStyles, behavior: paperExportBehavior })
+      const html = createPaperHtml(paper, { styles: paperExportStyles, behavior: paperExportBehavior,
+        guideStyles: paperGuideStyles, guideBehavior: paperGuideBehavior })
       const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }))
       const link = document.createElement('a')
       link.href = url; link.download = paper.fileName.replace(/\.pdf$/i, '') + '-讲解.html'; link.click()
@@ -349,6 +352,11 @@ window.__ModuleLoader__.load({
         } else heading.current?.focus({ preventScroll: true })
         previous.current = { id: paper.id, chapter: state.chapter }
       }, [paper.id, state.chapter, continuous])
+      if (explanation?.version === 4) return h('div', { className: 'dsh-paper-wiki-guide-reader' },
+        paper.warnings.length > 0 && h('div', { className: 'dsh-paper-wiki-warning', role: 'note' }, paper.warnings.map((warning, index) => h('p', { key: index }, warning))),
+        h('iframe', { key: paper.id + '-' + explanation.createdAt, className: 'dsh-paper-wiki-guide-frame',
+          title: '论文互动图解', sandbox: 'allow-scripts', referrerPolicy: 'no-referrer',
+          srcDoc: createPaperHtml(paper, { guideStyles: paperGuideStyles, guideBehavior: paperGuideBehavior }) }))
       return h('div', { className: 'dsh-paper-wiki-reader' },
         h('div', { className: 'dsh-paper-wiki-reader-heading' }, h('div', null, h('p', { className: 'dsh-paper-wiki-eyebrow' }, '本地论文 · ' + paper.pageCount + ' 页'),
           h('h1', { ref: heading, tabIndex: -1 }, paper.title), h('p', { className: 'dsh-paper-wiki-file-name' }, paper.fileName)),
@@ -393,13 +401,18 @@ window.__ModuleLoader__.load({
         && (state.preparing || active || !state.result || generation.paperId === state.result.id)
       const progressOwnsResult = !state.result?.explanation && showProgress && (state.preparing || generation.paperId === state.result?.id)
       const title = generation && (generation.fileName || state.papers.find(paper => paper.id === generation.paperId)?.title)
-      return h('section', { className: 'dsh-paper-wiki-page', 'aria-label': '论文百科', ref: page, 'data-reading': state.result ? '' : undefined },
+      const guide = state.result?.explanation?.version === 4
+      return h('section', { className: 'dsh-paper-wiki-page', 'aria-label': '论文百科', ref: page, 'data-reading': state.result ? '' : undefined, 'data-guide': guide ? '' : undefined },
         h('style', null, paperWikiStyles), state.deletion && h(DeleteDialog, { store, deletion: state.deletion }),
         h('div', { className: 'dsh-paper-wiki-shell' },
           h('header', { className: 'dsh-paper-wiki-bar' }, state.result
             ? h('nav', { className: 'dsh-paper-wiki-breadcrumb', 'aria-label': '当前位置' }, h('button', { type: 'button', onClick: store.returnToLibrary }, '论文库'),
               h(Glyph, { kind: 'chevron' }), h('span', { title: state.result.title }, state.result.title))
             : h('h1', { className: 'dsh-paper-wiki-brand' }, h('span', { className: 'dsh-paper-wiki-brand-icon' }, h(PaperIcon, { size: 20 })), '论文库'),
+            guide && h('div', { className: 'dsh-paper-wiki-actions' },
+              h(Button, { size: 'sm', variant: 'outline', onClick: () => downloadHtml(state.result) }, '导出 HTML'),
+              h(Button, { size: 'sm', variant: 'primary', disabled: state.importing || state.generating || active,
+                onClick: () => void store.generate() }, state.generating ? '正在提交…' : '重新讲解')),
             !state.result && h('div', { className: 'dsh-paper-wiki-actions' }, h(Button, { size: 'sm', variant: state.formOpen ? 'outline' : 'primary', disabled: state.importing || state.generating || active,
               icon: state.formOpen ? undefined : h(Glyph, { kind: 'plus' }), 'aria-expanded': state.formOpen,
               'aria-controls': state.formOpen ? formId : undefined,

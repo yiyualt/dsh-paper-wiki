@@ -9,10 +9,11 @@ export function loadPaperExplainerSkill() {
   return loaded
 }
 
-export function validateTeachingPlan(value, catalog) {
+export function validateTeachingPlan(value, catalog, options = {}) {
+  const compact = options.version === 4
   const fail = message => { throw Object.assign(new Error(message), { code: 'explanation-invalid', status: 502 }) }
   const string = (value, max) => typeof value === 'string' && value.trim() && value.length <= max
-  if (!string(value?.task, 1800) || !Array.isArray(value.concepts) || value.concepts.length < 5 || value.concepts.length > 10
+  if (!string(value?.task, 1800) || !Array.isArray(value.concepts) || value.concepts.length < (compact ? 3 : 5) || value.concepts.length > (compact ? 8 : 10)
     || !['paper', 'illustrative'].includes(value.example?.mode) || !string(value.example.question, 1000)
     || !string(value.example.input, 6000) || !string(value.example.baseline, 4000) || !string(value.example.method, 6000)
     || !string(value.example.output, 4000) || !Array.isArray(value.visuals) || value.visuals.length < 2 || value.visuals.length > 5) fail('教学设计需要明确任务、核心术语、完整同例和至少两种图示。')

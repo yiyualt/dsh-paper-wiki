@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import { runInNewContext } from 'node:vm'
-import { richDraft, teachingDraft } from '../test-support/explanation-fixture.js'
+import { richDraft, teachingDraft, compactTeachingDraft } from '../test-support/explanation-fixture.js'
 import { createPaperHtml } from '../src/paper-html.js'
 import { createPaperContentRenderer } from '../src/paper-blocks.js'
 import { createPaperGenerationProgress } from '../src/generation-progress.js'
@@ -33,6 +33,7 @@ async function fixture(respond) {
     document: { baseURI: 'http://localhost/dsh/', createElement() { const link = { click() { downloads.push({ ...link }) } }; return link } },
     URL: RuntimeURL, Intl, AbortController, AbortSignal, Blob, Date,
     paperWikiStyles: '', createPaperGenerationProgress, createPaperContentRenderer, createPaperHtml, paperExportStyles: '', paperExportBehavior: '',
+    paperGuideStyles: '/* trusted guide styles */', paperGuideBehavior: '',
     setTimeout(fn) { const id = ++timerId; timers.set(id, fn); return id }, clearTimeout(id) { timers.delete(id) },
     setInterval() { return 0 }, clearInterval() {},
     fetch: async (url, options = {}) => { const request = { url: new URL(url), ...options }; calls.push(request); return respond(request) },
@@ -464,5 +465,29 @@ test('skill lessons show every chapter continuously and export all teaching cont
   assert.match(html, /小写归一化/)
   assert.match(html, /准确率/)
   assert.doesNotMatch(html, /We study exact product-title retrieval/)
+  app.dispose()
+})
+
+test('version 4 reads the same isolated guide document that HTML export downloads', async () => {
+  const draft = compactTeachingDraft()
+  const paper = { ...firstPaper, explanation: { ...explainedPaper.explanation, version: 4, skill: 'paper-explainer',
+    title: draft.title, summary: draft.summary, caseStudy: draft.caseStudy,
+    chapters: draft.chapters.map(chapter => ({ ...chapter, title: chapter.id, markdown: 'Explanation fallback' })) } }
+  const app = await fixture(() => Response.json(paper))
+  await app.store.openPaper(firstId)
+  const reader = renderReader(app), frame = find(reader, node => node.type === 'iframe')
+  assert(frame, 'guide appears within the paper app')
+  assert.equal(frame.props.sandbox, 'allow-scripts')
+  assert.equal(frame.props.referrerPolicy, 'no-referrer')
+  assert.equal(frame.props.srcDoc, createPaperHtml(paper, { guideStyles: '/* trusted guide styles */', guideBehavior: '' }))
+  const page = app.Page({ store: app.store })
+  const download = find(page, node => node.type === 'button' && node.children.includes('导出 HTML'))
+  download.props.onClick()
+  assert.equal(app.downloads.length, 1)
+  assert.equal(app.downloads[0].download, '论文-讲解.html')
+  const exported = await app.downloadBlobs.get(app.downloads[0].href).text()
+  assert.equal(exported, frame.props.srcDoc)
+  assert.equal(app.calls.length, 1, 'reading and exporting never generate content')
+  assert.equal(find(reader, node => node.type?.name === 'ChapterDirectory'), null)
   app.dispose()
 })

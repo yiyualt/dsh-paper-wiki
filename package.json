@@ -1,6 +1,6 @@
 {
   "name": "dsh-paper-wiki",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "论文百科：读取本地 PDF 并生成带页码依据的中文讲解，适用于 DeepSeek Harness。",
   "type": "module",
   "engines": {
@@ -28,7 +28,8 @@
     "skills/paper-explainer/SKILL.md",
     "skills/paper-explainer/references/teaching-patterns.md",
     "skills/paper-explainer/references/app-contract.md",
-    "skills/paper-explainer/agents/openai.yaml"
+    "skills/paper-explainer/agents/openai.yaml",
+    "src/paper-case.js"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

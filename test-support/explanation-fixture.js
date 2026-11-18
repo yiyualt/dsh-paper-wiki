@@ -73,3 +73,31 @@ export function teachingDraft() {
     precision: 1, resultLabel: '准确率（%）', interpretation: '给定16条正确、20条总查询，计算得80%；改动是教学计数，不是在重跑实验。', references: references(3) })
   return value
 }
+
+
+/** A compact visual lesson; the complete case is held once in its own reading column. */
+export function compactTeachingDraft() {
+  const value = teachingDraft()
+  value.title = '大小写不同，为什么会漏掉同一个商品？'
+  value.summary = '把查询和商品标题都转为小写，再做精确匹配；它修复大小写差异，不解决同义改写。'
+  value.caseStudy = {
+    title: '同一查询：PHONE → p1', mode: 'illustrative',
+    references: [{ page: 1, quote: evidenceTexts[0] }, { page: 2, quote: evidenceTexts[1] }],
+    steps: [
+      { label: '输入', file: '01_input.json', chapterId: 'task', language: 'json',
+        code: '{\n  "query": "PHONE",\n  "products": [{"id": "p1", "title": "phone"}]\n}',
+        explanation: '查询与商品标题只有大小写不同，商品的稳定标识是 p1。',
+        annotations: [{ line: 2, explanation: 'PHONE 是用户要查的标题。' }, { line: 3, explanation: '候选商品 p1 的标题是小写 phone。' }] },
+      { label: '基线', file: '02_baseline.json', chapterId: 'baselines', language: 'json',
+        code: '{\n  "comparison": "PHONE != phone",\n  "product_id": null\n}',
+        explanation: '直接逐字符比较不相等，因此返回空结果。',
+        annotations: [{ line: 2, explanation: '大小写敏感的规则把这两个标题判为不相同。' }, { line: 3, explanation: 'null 表示没有找到商品，并不是新商品 ID。' }] },
+      { label: '作者方法', file: '03_normalized.json', chapterId: 'method', language: 'json',
+        code: '{\n  "normalized_query": "phone",\n  "matched_title": "phone",\n  "product_id": "p1"\n}',
+        explanation: '双方转小写后匹配，返回原商品 ID p1。',
+        annotations: [{ line: 2, explanation: '只统一字母大小写，不替换词语。' }, { line: 4, explanation: '相同标题对应商品 p1，因此输出 p1。' }] },
+    ],
+  }
+  for (const chapter of value.chapters) chapter.blocks = chapter.blocks.filter(block => !['example', 'flow'].includes(block.type))
+  return value
+}

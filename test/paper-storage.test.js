@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { teachingDraft, evidencePaper } from '../test-support/explanation-fixture.js'
+import { teachingDraft, compactTeachingDraft, evidencePaper } from '../test-support/explanation-fixture.js'
 import { renderExplanation } from '../src/paper-explanation.js'
 import { createPaperStorage, validPaperId } from '../src/paper-storage.js'
 
@@ -174,4 +174,26 @@ test('persists skill-based lessons with terms, diagrams and calculations while r
   assert.equal(result.chapters[1].blocks.find(block => block.type === 'terms').items.length, 5)
   assert.equal(result.chapters[3].blocks.find(block => block.type === 'diagram').edges.length, 2)
   assert.equal(result.chapters[4].blocks.find(block => block.type === 'calculation').inputs[0].value, 16)
+})
+
+test('round-trips version 4 shared cases and rejects broken case citations without replacing the saved lesson', async t => {
+  const { root, storage } = await fixture(t)
+  const record = { ...paper(), pages: evidencePaper.pages, pageCount: evidencePaper.pageCount }
+  await storage.save(record, bytes)
+  const draft = compactTeachingDraft()
+  const lesson = { ...explanation(), version: 4, skill: 'paper-explainer', title: draft.title, summary: draft.summary,
+    caseStudy: draft.caseStudy, chapters: renderExplanation(record, draft) }
+  await storage.setExplanation(record.id, lesson)
+  const reopened = createPaperStorage(join(root, 'papers'))
+  assert.deepEqual((await reopened.get(record.id)).explanation, lesson)
+  for (const damage of [
+    value => { value.caseStudy.steps[0].annotations[0].line = 999 },
+    value => { value.caseStudy.references[0].quote = 'Invented source quotation' },
+    value => { delete value.caseStudy },
+  ]) {
+    const invalid = structuredClone(lesson); damage(invalid)
+    await assert.rejects(reopened.setExplanation(record.id, invalid), TypeError)
+    assert.deepEqual((await storage.get(record.id)).explanation, lesson)
+  }
+  assert.deepEqual(await reopened.getPdf(record.id), bytes)
 })

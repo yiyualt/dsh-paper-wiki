@@ -158,12 +158,12 @@ test('changing chapters replaces all displayed example content without retaining
 test('term cards expose a definition, concrete example, role and optional distinction together', () => {
   const attack = '<script>alert(1)</script>'
   const tree = fixture([{ type: 'terms', title: '先理解两个对象', references: [ref(4)], items: [
-    { term: '命题', meaning: '一条主语、关系与宾语组成的记录。', role: '用实体寻找相邻的记录。', example: 'Chynna → is daughter of → Michelle' },
+    { term: '命题', meaning: '一条主语、关系与宾语组成的记录。', role: '用实体寻找相邻的记录。', example: 'Casey → is daughter of → Alex' },
     { term: '来源段落', meaning: '抽取这条命题的具体段落。', role: '把原始段落提供给阅读模型。', example: attack, contrast: '命题记录与原段落是两个对象。' },
   ] }]).render()
   assert.deepEqual(all(tree, node => node.type === 'dt').map(node => node.children[0]), ['命题', '来源段落'])
   const text = contentText(tree)
-  for (const expected of ['一条主语、关系与宾语', 'Chynna → is daughter of → Michelle', '用实体寻找', '命题记录与原段落']) assert(text.includes(expected))
+  for (const expected of ['一条主语、关系与宾语', 'Casey → is daughter of → Alex', '用实体寻找', '命题记录与原段落']) assert(text.includes(expected))
   assert(text.includes(attack))
   assert.equal(all(tree, node => node.type === 'script' || node.props.dangerouslySetInnerHTML).length, 0)
   assert(!text.includes(ref().quote))
@@ -175,8 +175,8 @@ function diagram() {
     nodes: [
       { id: 'a', label: 'Victim of Romance', detail: '已有专辑段落。', column: 'album' },
       { id: 'd', label: '另一条已有记录', detail: '同列节点。', column: 'album' },
-      { id: 'm', label: 'Michelle Phillips', detail: '两个关系共有的实体。', column: 'person' },
-      { id: 'c', label: 'Chynna Phillips', detail: 'Wilson Phillips 段落提供子女关系。', column: 'child' },
+      { id: 'm', label: 'Alex North', detail: '两个关系共有的实体。', column: 'person' },
+      { id: 'c', label: 'Casey North', detail: 'Family Notes 段落提供子女关系。', column: 'child' },
     ],
     edges: [
       { id: 'performer', from: 'a', to: 'm', label: '表演者' },
@@ -202,7 +202,7 @@ test('diagrams preserve reverse and same-column arrows and synchronize highlight
   assert.match(sameColumn.props.d, /^M214,221 C/)
   assert(!sameColumn.props.d.includes('NaN'))
   const relations = find(tree, node => node.props.className === 'dsh-paper-wiki-diagram-relations')
-  assert.match(contentText(relations), /Chynna Phillips\s+→\s+Michelle Phillips\s+：\s+is daughter of/)
+  assert.match(contentText(relations), /Casey North\s+→\s+Alex North\s+：\s+is daughter of/)
   assert(contentText(tree).includes('已有证据只确定表演者。'))
   const stages = find(tree, node => node.props.className === 'dsh-paper-wiki-diagram-stages')
   assert(stages.children.every(node => node.type === 'button' && node.props.type === 'button'))
@@ -211,10 +211,10 @@ test('diagrams preserve reverse and same-column arrows and synchronize highlight
   assert.equal(find(tree, node => node.type === 'g' && node.props.key === 'daughter').props['data-active'], true)
   assert.equal(find(tree, node => node.type === 'g' && node.props.key === 'performer').props['data-active'], undefined)
   assert(contentText(tree).includes('新增子女指向母亲的关系。'))
-  const child = find(tree, node => node.props.className === 'dsh-paper-wiki-diagram-node' && node.children[0] === 'Chynna Phillips')
+  const child = find(tree, node => node.props.className === 'dsh-paper-wiki-diagram-node' && node.children[0] === 'Casey North')
   child.props.onClick()
   tree = app.render()
-  assert(contentText(find(tree, node => node.props.className === 'dsh-paper-wiki-diagram-detail')).includes('Wilson Phillips 段落提供子女关系。'))
+  assert(contentText(find(tree, node => node.props.className === 'dsh-paper-wiki-diagram-detail')).includes('Family Notes 段落提供子女关系。'))
 })
 
 test('model diagram labels remain text and cannot introduce SVG markup or source coordinates', () => {
@@ -233,9 +233,9 @@ test('evidence states are all visible with exact budgets, computed coverage and 
   const app = fixture([{ type: 'evidence', title: '修复前后', mode: 'illustrative', question: '表演者的子女是谁？', budget: 2,
     required: ['专辑表演者', '表演者的子女'], references: [ref(7)],
     items: [
-      { id: 'album', label: '专辑段落', detail: '说明表演者是 Michelle。', supports: ['专辑表演者'] },
+      { id: 'album', label: '专辑段落', detail: '说明表演者是 Alex。', supports: ['专辑表演者'] },
       { id: 'other', label: '其他段落', detail: '没有提供本例所需关系。', supports: [] },
-      { id: 'child', label: 'Wilson Phillips 段落', detail: '说明 Chynna 是 Michelle 的女儿。', supports: ['表演者的子女'] },
+      { id: 'child', label: 'Family Notes 段落', detail: '说明 Casey 是 Alex 的女儿。', supports: ['表演者的子女'] },
     ],
     states: [{ label: '修复前', ids: ['album', 'other'], explanation: '仍缺少子女身份。' },
       { label: '修复后', ids: ['album', 'child'], explanation: '两条关系已齐全。' }] }])
@@ -250,10 +250,10 @@ test('evidence states are all visible with exact budgets, computed coverage and 
   assert(contentText(tree).includes('构造示例'))
   assert(contentText(tree).includes('仍缺少子女身份。'))
   assert(contentText(tree).includes('两条关系已齐全。'))
-  const detailButton = find(states[1], node => node.type === 'button' && contentText(node).includes('Wilson Phillips'))
+  const detailButton = find(states[1], node => node.type === 'button' && contentText(node).includes('Family Notes'))
   detailButton.props.onClick()
   tree = app.render()
-  assert(contentText(find(tree, node => node.props.className === 'dsh-paper-wiki-evidence-detail')).includes('Chynna 是 Michelle 的女儿'))
+  assert(contentText(find(tree, node => node.props.className === 'dsh-paper-wiki-evidence-detail')).includes('Casey 是 Alex 的女儿'))
 })
 
 function calculation(mode = 'illustrative') {

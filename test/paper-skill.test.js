@@ -22,3 +22,12 @@ test('teaching plans require grounded concepts and a complete same-case comparis
   const repeated = teachingPlanFixture(); repeated.visuals = [{ type: 'chart', chapterId: 'results', question: 'A' }, { type: 'chart', chapterId: 'results', question: 'B' }]
   assert.throws(() => validateTeachingPlan(repeated, catalog), error => error.code === 'explanation-invalid')
 })
+
+test('compact teaching planning selects a few necessary concepts while legacy planning retains its coverage floor', () => {
+  const concise = teachingPlanFixture(); concise.concepts = concise.concepts.slice(0, 3)
+  assert.equal(validateTeachingPlan(concise, catalog, { version: 4 }).concepts.length, 3)
+  assert.throws(() => validateTeachingPlan(concise, catalog), error => error.code === 'explanation-invalid')
+  const overloaded = teachingPlanFixture()
+  overloaded.concepts = Array.from({ length: 9 }, (_, index) => ({ ...overloaded.concepts[index % 5], term: '术语' + index }))
+  assert.throws(() => validateTeachingPlan(overloaded, catalog, { version: 4 }), error => error.code === 'explanation-invalid')
+})
