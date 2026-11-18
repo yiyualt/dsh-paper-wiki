@@ -234,7 +234,8 @@ window.__ModuleLoader__.load({
         setFormOpen(formOpen) { update({ formOpen, error: '',
           ...(formOpen && snapshot.generation && terminal.has(snapshot.generation.phase) && { generation: null }) }) },
         selectChapter(chapter) { if (snapshot.result?.explanation?.chapters[chapter]) update({ chapter }) },
-        returnToLibrary() { ++openRevision; openRequest?.abort(); update({ result: null, openingId: null, formOpen: false, error: '' }) },
+        returnToLibrary() { ++openRevision; openRequest?.abort(); update({ result: null, openingId: null, formOpen: false, error: '',
+          ...(snapshot.generation?.phase === 'completed' && { generation: null }) }) },
         requestDelete(item) { update({ deletion: { item, pending: false, error: '' } }) },
         cancelDelete() { if (!snapshot.deletion?.pending) update({ deletion: null }) },
         dispose() { disposed = true; stopPolling(); for (const request of controllers) request.abort(); listeners.clear() },
@@ -362,7 +363,8 @@ window.__ModuleLoader__.load({
       useEffect(() => { if (page.current) page.current.scrollTop = 0 }, [state.result?.id, state.chapter])
       const active = state.generation && !terminal.has(state.generation.phase)
       const generation = state.preparing || state.generation
-      const showProgress = generation && (state.preparing || active || !state.result || generation.paperId === state.result.id && generation.phase !== 'completed')
+      const showProgress = generation && generation.phase !== 'completed'
+        && (state.preparing || active || !state.result || generation.paperId === state.result.id)
       const progressOwnsResult = !state.result?.explanation && showProgress && (state.preparing || generation.paperId === state.result?.id)
       const title = generation && (generation.fileName || state.papers.find(paper => paper.id === generation.paperId)?.title)
       return h('section', { className: 'dsh-paper-wiki-page', 'aria-label': '论文百科', ref: page, 'data-reading': state.result ? '' : undefined },

@@ -183,6 +183,37 @@ test('background generation completion updates a paper without changing another 
   app.dispose()
 })
 
+test('completed generation updates the explanation and library without a duplicate success card', async () => {
+  for (const returnBeforeCompletion of [false, true]) {
+    let completed = false
+    const app = await fixture(request => {
+      if (request.url.pathname.endsWith('/papers')) return Response.json(completed ? explainedPaper : firstPaper)
+      if (request.method === 'POST') return Response.json({ job: { id: jobId, paperId: firstId, phase: 'writing', elapsedMs: 0 } }, { status: 202 })
+      completed = true
+      return Response.json({ job: { id: jobId, paperId: firstId, phase: 'completed', elapsedMs: 1000 } })
+    })
+    await app.store.openPaper(firstId)
+    await app.store.generate()
+    if (returnBeforeCompletion) {
+      app.store.returnToLibrary()
+      assert.equal(app.store.getSnapshot().generation.phase, 'writing', 'returning to the library keeps active progress')
+    }
+    await app.tick()
+    assert.equal(find(app.Page({ store: app.store }), node => node.type?.name === 'GenerationProgress'), null)
+    assert.equal(app.store.getSnapshot().papers.find(paper => paper.id === firstId).explained, true)
+    if (!returnBeforeCompletion) {
+      assert.equal(app.store.getSnapshot().result.explanation.chapters[0].id, 'overview')
+      app.store.returnToLibrary()
+      assert.equal(app.store.getSnapshot().generation, null)
+    }
+    assert.equal(app.store.getSnapshot().result, null)
+    const page = app.Page({ store: app.store })
+    assert.equal(find(page, node => node.type?.name === 'GenerationProgress'), null)
+    assert(find(page, node => node.type?.name === 'PaperLibrary'))
+    app.dispose()
+  }
+})
+
 test('refresh recovers an active generation and disposal stops polling', async () => {
   const app = await fixture(request => request.url.pathname.endsWith('/papers') ? Response.json({ papers: [firstPaper] })
     : Response.json({ job: { id: jobId, paperId: firstId, phase: 'reviewing', elapsedMs: 2000 } }))

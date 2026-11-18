@@ -32,23 +32,21 @@ export function createPaperGenerationProgress(React, primitives) {
 
   return function GenerationProgress({ generation, offline, store }) {
     const titleId = useId()
+    if (generation.phase === 'completed') return null
     const index = stages.findIndex(stage => stage.phase === generation.phase)
     const stage = stages[index]
     const title = generation.title || generation.fileName || '论文'
     if (terminal.has(generation.phase)) {
-      const completed = generation.phase === 'completed'
       const failed = generation.phase === 'failed'
       const state = store.getSnapshot?.()
       const busy = Boolean(state?.generating || state?.importing || state?.preparing
         || state?.generation && !terminal.has(state.generation.phase))
       return h('div', { className: 'dsh-paper-wiki-generation-done', 'data-state': generation.phase },
         h('p', { role: failed ? 'alert' : 'status' },
-          completed && h(IconCheckOutlineRegular, { size: 16, 'aria-hidden': true }),
-          completed ? 'Wiki 已保存' : failed ? generation.error || '本次讲解未完成。' : '已取消讲解',
+          failed ? generation.error || '本次讲解未完成。' : '已取消讲解',
           h('span', null, title + ' · 用时 ' + durationLabel(generation.elapsedMs))),
-        generation.paperId && h(Button, { size: 'sm', variant: 'outline', disabled: !completed && busy,
-          onClick: () => completed ? void store.openPaper(generation.paperId) : void store.generate(generation.paperId) },
-          completed ? '打开讲解' : '重新尝试'))
+        generation.paperId && h(Button, { size: 'sm', variant: 'outline', disabled: busy,
+          onClick: () => void store.generate(generation.paperId) }, '重新尝试'))
     }
 
     return h('section', { className: 'dsh-paper-wiki-generation', 'aria-labelledby': titleId },
