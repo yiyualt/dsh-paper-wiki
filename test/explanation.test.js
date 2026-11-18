@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { test } from 'node:test'
 import { evidencePaper, richDraft } from '../test-support/explanation-fixture.js'
+import { createEvidenceCatalog } from '../src/paper-evidence.js'
 import { generateExplanation, renderExplanation, validateExplanation } from '../src/paper-explanation.js'
 
 const paper = { ...evidencePaper, id: randomUUID() }
@@ -47,7 +48,7 @@ test('generates only after factual review and uses current provider selection fo
 test('review failure gets one revision and never publishes twice-rejected drafts', async () => {
   const rejected = { approved: false, issues: ['results：所引页面不支持实验结论'] }
   const calls = []
-  await assert.rejects(generateExplanation(model([draft(), rejected, draft(), rejected], option => calls.push(option)),
+  await assert.rejects(generateExplanation(model([draft(), rejected, { chapters: [draft().chapters.find(chapter => chapter.id === 'results')] }, rejected], option => calls.push(option)),
     { model: 'test' }, paper), error => error.code === 'explanation-review-failed')
   assert.equal(calls.length, 4)
   assert.match(calls[2].messages[0].content[0].text, /所引页面不支持/)
@@ -84,4 +85,62 @@ test('rich explanation persists typed blocks and exports all steps without losin
   assert.equal(results.blocks[1].data[1].value, 80)
   assert.match(results.markdown, /60%/)
   assert.match(results.markdown, /准确率/)
+})
+
+function sourceDraft() {
+  const value = draft()
+  for (const chapter of value.chapters) for (const block of chapter.blocks) {
+    block.references = block.references.map(ref => ({ sourceId: `p${ref.page}-s1` }))
+    if (block.type === 'chart') for (const point of block.data) point.reference = { sourceId: `p${point.reference.page}-s1` }
+  }
+  return value
+}
+
+test('models select source IDs while the server supplies exact page text including PDF word breaks', async () => {
+  const brokenPaper = structuredClone(paper)
+  brokenPaper.pages[1].text = brokenPaper.pages[1].text.replace('lowercases', 'lower-\ncases')
+  const calls = []
+  const result = await generateExplanation(model([sourceDraft(), { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, brokenPaper)
+  const refs = result.chapters.find(chapter => chapter.id === 'method').blocks[0].references
+  assert.equal(refs[0].page, 2)
+  assert.match(refs[0].quote, /lower-\ncases/)
+  assert.equal('sourceId' in refs[0], false, 'persisted canonical references remain backward compatible')
+  assert.match(calls[0].system, /不能自己编编号或抄写/)
+  assert.match(calls[0].messages[0].content[0].text, /p2-s1/)
+  assert.match(calls[1].messages[0].content[0].text, /lower-\\ncases/, 'factual review receives the original server-resolved quotation')
+})
+
+test('one repair request targets all invalid chapters and preserves every valid chapter', async () => {
+  const first = sourceDraft(), fixed = sourceDraft(), calls = []
+  first.chapters[0].blocks[0].text = '首稿已经讲清商品标题精确匹配的任务。'
+  for (const id of ['baselines', 'setup']) first.chapters.find(chapter => chapter.id === id).blocks[0].references[0].sourceId = 'p99-s99'
+  const patch = { chapters: fixed.chapters.filter(chapter => ['baselines', 'setup'].includes(chapter.id)) }
+  const result = await generateExplanation(model([first, patch, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
+  assert.equal(calls.length, 3)
+  const prompt = calls[1].messages[0].content[0].text
+  assert.match(prompt, /定向章节修复/)
+  assert.match(prompt, /"id":"baselines"/)
+  assert.match(prompt, /"id":"setup"/)
+  assert.doesNotMatch(prompt, /"id":"overview"/)
+  assert.equal(calls[1].maxTokens, 16000)
+  assert.equal(result.chapters[0].blocks[0].text, first.chapters[0].blocks[0].text)
+})
+
+test('chapter repair cannot change another chapter or publish a still-invalid source ID', async () => {
+  const first = sourceDraft()
+  first.chapters[2].blocks[0].references[0].sourceId = 'p99-s99'
+  await assert.rejects(generateExplanation(model([first, { chapters: [sourceDraft().chapters[0]] }]), { model: 'test' }, paper), /不得增删或修改其他章节/)
+  await assert.rejects(generateExplanation(model([first, { chapters: [first.chapters[2]] }]), { model: 'test' }, paper), error => error.code === 'explanation-invalid')
+})
+
+test('structured factual review issues repair only the specified chapter and still require review', async () => {
+  const first = sourceDraft(), repaired = sourceDraft(), calls = []
+  const issue = { approved: false, issues: [{ chapterId: 'analysis', message: '请删除没有原文依据的泛化结论' }] }
+  repaired.chapters[6].blocks[0].text = '评测仅使用固定的英语查询，无法证明真实流量表现。'
+  const result = await generateExplanation(model([first, issue, { chapters: [repaired.chapters[6]] }, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
+  assert.equal(calls.length, 4)
+  assert.equal(calls[2].maxTokens, 8000)
+  assert.match(calls[2].messages[0].content[0].text, /"id":"analysis"/)
+  assert.doesNotMatch(calls[2].messages[0].content[0].text, /"id":"method"/)
+  assert.equal(result.chapters[6].blocks[0].text, repaired.chapters[6].blocks[0].text)
 })
