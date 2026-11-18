@@ -4,6 +4,8 @@ import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
+import { teachingDraft, evidencePaper } from '../test-support/explanation-fixture.js'
+import { renderExplanation } from '../src/paper-explanation.js'
 import { createPaperStorage, validPaperId } from '../src/paper-storage.js'
 
 const bytes = Buffer.from('%PDF-1.7\nlocal fixture\n')
@@ -157,4 +159,19 @@ test('ignores malformed new block archives on read without exposing invalid cita
     assert.equal(await storage.get(record.id), undefined)
   }
   assert.deepEqual((await storage.list()).map(item => item.id), [keep.id])
+})
+
+test('persists skill-based lessons with terms, diagrams and calculations while retaining legacy archives', async t => {
+  const { root, storage } = await fixture(t)
+  const record = { ...paper(), pages: evidencePaper.pages, pageCount: evidencePaper.pageCount }
+  await storage.save(record, bytes)
+  const lesson = { ...explanation(), version: 3, skill: 'paper-explainer', chapters: renderExplanation(record, teachingDraft()) }
+  await storage.setExplanation(record.id, lesson)
+  const reopened = createPaperStorage(join(root, 'papers'))
+  const result = (await reopened.get(record.id)).explanation
+  assert.equal(result.version, 3)
+  assert.equal(result.skill, 'paper-explainer')
+  assert.equal(result.chapters[1].blocks.find(block => block.type === 'terms').items.length, 5)
+  assert.equal(result.chapters[3].blocks.find(block => block.type === 'diagram').edges.length, 2)
+  assert.equal(result.chapters[4].blocks.find(block => block.type === 'calculation').inputs[0].value, 16)
 })

@@ -29,7 +29,7 @@ window.__ModuleLoader__.load({
       const explanation = value.explanation
       if (explanation && (!Array.isArray(explanation.chapters) || !explanation.chapters.length
         || explanation.chapters.some(chapter => typeof chapter.id !== 'string' || typeof chapter.title !== 'string' || typeof chapter.markdown !== 'string'
-          || chapter.blocks !== undefined && (!Array.isArray(chapter.blocks) || !chapter.blocks.length || chapter.blocks.length > 10 || chapter.blocks.some(block => !block || !['paragraph', 'example', 'flow', 'table', 'chart'].includes(block.type)))))) return null
+          || chapter.blocks !== undefined && (!Array.isArray(chapter.blocks) || !chapter.blocks.length || chapter.blocks.length > 10 || chapter.blocks.some(block => !block || !['paragraph', 'example', 'flow', 'table', 'chart', 'terms', 'diagram', 'evidence', 'calculation'].includes(block.type)))))) return null
       return { ...item, warnings: Array.isArray(value.warnings) ? value.warnings.filter(item => typeof item === 'string') : [], explanation }
     }
     function validJob(value) {
@@ -318,6 +318,13 @@ window.__ModuleLoader__.load({
       link.href = url; link.download = paper.fileName.replace(/\.pdf$/i, '') + '-讲解.md'; link.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
+    function downloadHtml(paper) {
+      const html = createPaperHtml(paper, { styles: paperExportStyles, behavior: paperExportBehavior })
+      const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }))
+      const link = document.createElement('a')
+      link.href = url; link.download = paper.fileName.replace(/\.pdf$/i, '') + '-讲解.html'; link.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
     function ChapterDirectory({ state, store }) {
       const selectId = useId(), chapters = state.result.explanation.chapters
       return h('nav', { 'aria-label': '讲解章节' }, h('h2', { className: 'dsh-paper-wiki-rail-label' }, '章节目录'),
@@ -331,24 +338,38 @@ window.__ModuleLoader__.load({
     function PaperReader({ store, state }) {
       const paper = state.result, explanation = paper.explanation
       const chapter = explanation?.chapters[state.chapter]
-      const heading = useRef(null)
+      const heading = useRef(null), sections = useRef({}), previous = useRef(null)
+      const continuous = explanation?.version >= 3
       const active = state.generation && !terminal.has(state.generation.phase)
-      useEffect(() => { heading.current?.focus({ preventScroll: true }) }, [paper.id, state.chapter])
+      useEffect(() => {
+        const changed = previous.current?.id === paper.id && previous.current.chapter !== state.chapter
+        if (continuous && changed) {
+          const target = sections.current?.[chapter?.id]
+          target?.scrollIntoView({ block: 'start' }); target?.focus({ preventScroll: true })
+        } else heading.current?.focus({ preventScroll: true })
+        previous.current = { id: paper.id, chapter: state.chapter }
+      }, [paper.id, state.chapter, continuous])
       return h('div', { className: 'dsh-paper-wiki-reader' },
         h('div', { className: 'dsh-paper-wiki-reader-heading' }, h('div', null, h('p', { className: 'dsh-paper-wiki-eyebrow' }, '本地论文 · ' + paper.pageCount + ' 页'),
           h('h1', { ref: heading, tabIndex: -1 }, paper.title), h('p', { className: 'dsh-paper-wiki-file-name' }, paper.fileName)),
-          explanation && h('div', { className: 'dsh-paper-wiki-actions' }, h(Button, { size: 'sm', variant: 'outline', onClick: () => downloadMarkdown(paper) }, '导出讲解'),
+          explanation && h('div', { className: 'dsh-paper-wiki-actions' }, h(Button, { size: 'sm', variant: 'outline', onClick: () => continuous ? downloadHtml(paper) : downloadMarkdown(paper) }, continuous ? '导出 HTML' : '导出讲解'),
             h(Button, { size: 'sm', variant: 'primary', disabled: state.importing || state.generating || active,
               onClick: () => void store.generate() }, state.generating ? '正在提交…' : '重新讲解'))),
         paper.warnings.length > 0 && h('div', { className: 'dsh-paper-wiki-warning', role: 'note' }, paper.warnings.map((warning, index) => h('p', { key: index }, warning))),
         explanation ? h('div', { className: 'dsh-paper-wiki-columns' }, h('aside', { className: 'dsh-paper-wiki-sidebar' }, h(ChapterDirectory, { state, store })),
           h('article', { className: 'dsh-paper-wiki-article', 'aria-label': '论文讲解' },
-            h('header', { className: 'dsh-paper-wiki-article-header' }, h('h2', { className: 'dsh-paper-wiki-article-title' }, chapter.title),
-              h('div', { className: 'dsh-paper-wiki-meta' }, h('span', null, '中文讲解'),
+            (continuous ? explanation.chapters : [chapter]).map((item, index) => h('section', {
+              key: paper.id + '-' + explanation.createdAt + '-' + item.id,
+              className: 'dsh-paper-wiki-lesson-section', 'aria-labelledby': 'paper-' + paper.id + '-' + item.id,
+            }, h('header', { className: 'dsh-paper-wiki-article-header' }, h('h2', {
+                className: 'dsh-paper-wiki-article-title', id: 'paper-' + paper.id + '-' + item.id, tabIndex: -1,
+                ref: node => { if (sections.current) sections.current[item.id] = node },
+              }, item.title),
+              (!continuous || index === 0) && h('div', { className: 'dsh-paper-wiki-meta' }, h('span', null, '中文讲解'),
                 explanation.model && h('span', null, explanation.model), explanation.createdAt && h('time', { dateTime: explanation.createdAt }, dateFormat.format(new Date(explanation.createdAt))))),
-            h('div', { className: 'dsh-paper-wiki-prose' }, chapter.blocks
-              ? h(PaperContent, { key: paper.id + '-' + explanation.createdAt + '-' + chapter.id, chapter, labels })
-              : h(MarkdownText, { text: sourceMarkdown(chapter.markdown, paper), omitHtml: true, labels }))))
+              h('div', { className: 'dsh-paper-wiki-prose' }, item.blocks
+                ? h(PaperContent, { key: paper.id + '-' + explanation.createdAt + '-' + item.id, chapter: item, labels })
+                : h(MarkdownText, { text: sourceMarkdown(item.markdown, paper), omitHtml: true, labels }))))))
           : h('div', { className: 'dsh-paper-wiki-explanation-empty' },
             h(Button, { variant: 'primary', disabled: state.importing || state.generating || active, onClick: () => void store.generate() }, '生成讲解')))
 
@@ -364,7 +385,8 @@ window.__ModuleLoader__.load({
       const state = useSyncExternalStore(store.subscribe, store.getSnapshot), page = useRef(null)
       const formId = useId()
       useEffect(() => store.initialize(), [store])
-      useEffect(() => { if (page.current) page.current.scrollTop = 0 }, [state.result?.id, state.chapter])
+      useEffect(() => { if (page.current) page.current.scrollTop = 0 }, [state.result?.id])
+      useEffect(() => { if (page.current && !(state.result?.explanation?.version >= 3)) page.current.scrollTop = 0 }, [state.chapter])
       const active = state.generation && !terminal.has(state.generation.phase)
       const generation = state.preparing || state.generation
       const showProgress = generation && generation.phase !== 'completed'

@@ -22,6 +22,31 @@ const chart = () => ({ type: 'chart', title: '固定负载耗时', context: '相
   { label: '基线', value: 1200, display: '1,200', reference: { page: 2, quote: 'baseline latency was 1,200 ms' } },
   { label: '缓存', value: 600, display: '600', reference: { page: 2, quote: 'cached latency was 600 ms' } },
 ], references: [{ page: 2, quote: 'For the fixed workload, baseline latency was 1,200 ms and cached latency was 600 ms.' }] })
+const terms = () => ({ type: 'terms', title: '读懂方法需要的概念', items: [
+  { term: '来源', meaning: '记录事实出现在哪个原始段落。', role: '使选中的事实可以返回原段落。', example: '事实甲来自段落d1。', contrast: '相同事实可在不同段落分别出现。' },
+  { term: '覆盖关系', meaning: '回答问题需要的已知关系。', role: '检查当前证据还缺哪项。', example: '需要关系甲与关系乙，d1只提供关系甲。' },
+], references: refs })
+const diagram = () => ({ type: 'diagram', title: '事实、实体与来源', mode: 'illustrative', description: '仅用于解释三类对象的关系。',
+  columns: [{ id: 'entities', label: '实体' }, { id: 'facts', label: '命题出现' }, { id: 'sources', label: '来源段落' }],
+  nodes: [{ id: 'entity1', label: '实验室A', detail: '一个被提到的实体。', column: 'entities' },
+    { id: 'fact1', label: '关系甲', detail: '主体、关系与客体的出现。', column: 'facts' },
+    { id: 'source1', label: 'd1', detail: '保存原始正文的来源段落。', column: 'sources' }],
+  edges: [{ id: 'mention', from: 'fact1', to: 'entity1', label: '包含该实体' }, { id: 'origin', from: 'fact1', to: 'source1', label: '出现在该来源' }],
+  steps: [{ label: '找到共同实体', explanation: '先确认命题涉及哪个实体。', activeNodes: ['fact1', 'entity1'], activeEdges: ['mention'] },
+    { label: '返回原始来源', explanation: '再根据来源映射找到原段落。', activeNodes: ['fact1', 'source1'], activeEdges: ['origin'] }], references: refs })
+const evidence = () => ({ type: 'evidence', title: '固定两段的证据状态', mode: 'illustrative', question: '需要哪两项关系才能回答？', budget: 2,
+  required: ['关系甲', '关系乙'], items: [
+    { id: 'd1', label: '已有证据', detail: '提供关系甲。', supports: ['关系甲'] },
+    { id: 'd2', label: '无关段落', detail: '没有提供这两项关系。', supports: [] },
+    { id: 'd3', label: '补充证据', detail: '提供关系乙。', supports: ['关系乙'] }],
+  states: [{ label: '修复前', ids: ['d1', 'd2'], explanation: '两段中只覆盖关系甲。' },
+    { label: '修复后', ids: ['d1', 'd3'], explanation: '仍是两段，覆盖关系甲与关系乙。' }], references: refs })
+const calculation = () => ({ type: 'calculation', title: '一步候选评分', mode: 'illustrative', formula: 's = 0.55 × neighbor + 0.25 × seed + 0.20',
+  inputs: [{ id: 'neighbor', label: '邻居相关度', meaning: '教学给定的邻居相似度。', value: .6, min: 0, max: 1, step: .05 },
+    { id: 'seed', label: '种子相关度', meaning: '教学给定的种子相似度。', value: .8 }],
+  expression: { op: 'add', args: [{ op: 'multiply', args: [{ number: .55 }, { input: 'neighbor' }] },
+    { op: 'multiply', args: [{ number: .25 }, { input: 'seed' }] }, { number: .2 }] },
+  precision: 4, resultLabel: '候选得分', interpretation: '这里只演示已给定数值的算术，不能视为实测效果。', references: refs })
 const invalid = error => error.code === 'explanation-invalid' && error.status === 502
 
 test('accepts the five typed blocks and discards untrusted extra metadata', () => {
@@ -183,4 +208,73 @@ test('plain Markdown fields cannot introduce fences, lists, links or HTML outsid
   assert.ok(!markdown.includes('<script>'))
   const block = example(); block.steps[0].language = 'text\n```\n<script>bad()</script>'
   assert.throws(() => renderContentMarkdown([block]), invalid)
+})
+
+test('validates the four richer teaching blocks while retaining only declarative content', () => {
+  const graph = diagram(); graph.svg = '<svg onload="bad()">'; graph.nodes[0].x = 999
+  const values = validateContentBlocks(paper, [terms(), graph, evidence(), calculation()], 'method')
+  assert.deepEqual(values.map(block => block.type), ['terms', 'diagram', 'evidence', 'calculation'])
+  assert.equal(values[0].items[0].contrast, terms().items[0].contrast)
+  assert.equal('svg' in values[1], false)
+  assert.equal('x' in values[1].nodes[0], false)
+  assert.deepEqual(values[1].edges.map(edge => [edge.from, edge.to]), [['fact1', 'entity1'], ['fact1', 'source1']])
+  assert.equal('min' in values[3].inputs[1], false)
+  for (const original of [terms(), diagram(), evidence(), calculation()]) {
+    original.references = [{ page: 1, quote: 'invented supporting reference' }]
+    assert.throws(() => validateContentBlocks(paper, [original]), invalid)
+  }
+})
+
+test('terms require a definition, method role and concrete example for every item', () => {
+  for (const mutate of [block => { block.items.pop() }, block => { block.items[0] = null },
+    block => { block.items[0].meaning = '' }, block => { block.items[0].role = {} },
+    block => { block.items[0].example = 'x'.repeat(801) }, block => { block.items[0].contrast = [] }]) {
+    const block = terms(); mutate(block)
+    assert.throws(() => validateContentBlocks(paper, [block]), invalid)
+  }
+})
+
+test('diagrams reject unknown endpoints, invalid activation, self loops and duplicate IDs', () => {
+  for (const mutate of [block => { block.nodes[0].column = 'missing' }, block => { block.edges[0].to = 'missing' },
+    block => { block.edges[0].to = block.edges[0].from }, block => { block.edges[1].id = block.edges[0].id },
+    block => { block.nodes[1].id = block.nodes[0].id }, block => { block.columns[1].id = block.columns[0].id },
+    block => { block.steps[0].activeEdges = ['missing'] }, block => { block.steps[0].activeNodes = ['fact1', 'fact1'] },
+    block => { block.nodes[0].id = '<svg>' }, block => { block.steps[0] = null }, block => { block.mode = 'estimated' }]) {
+    const block = diagram(); mutate(block)
+    assert.throws(() => validateContentBlocks(paper, [block]), invalid)
+  }
+})
+
+test('evidence states preserve the exact budget and declared relationship coverage', () => {
+  for (const mutate of [block => { block.budget = 0 }, block => { block.budget = 9 },
+    block => { block.states[0].ids = ['d1'] }, block => { block.states[0].ids = ['d1', 'd1'] },
+    block => { block.states[0].ids = ['d1', 'missing'] }, block => { block.items[0].supports = ['未声明关系'] },
+    block => { block.required = ['关系甲', '关系甲'] }, block => { block.items[1].id = block.items[0].id },
+    block => { block.items[1].supports = null }, block => { block.states[0] = null }]) {
+    const block = evidence(); mutate(block)
+    assert.throws(() => validateContentBlocks(paper, [block]), invalid)
+  }
+})
+
+test('calculation content rejects unsafe or invalid arithmetic before persistence', () => {
+  for (const mutate of [block => { block.mode = 'paper' }, block => { block.inputs[0].max = .5 },
+    block => { block.inputs[0].step = 0 }, block => { block.inputs[0].meaning = '' },
+    block => { block.expression = 'eval("bad()")' }, block => { block.expression = { input: 'missing' } },
+    block => { block.expression = { op: 'divide', args: [{ number: 1 }, { number: 0 }] } },
+    block => { block.precision = 7 }]) {
+    const block = calculation(); mutate(block)
+    assert.throws(() => validateContentBlocks(paper, [block]), invalid)
+  }
+  const block = calculation(); block.mode = 'paper'; block.inputs = block.inputs.map(({ min, max, step, ...input }) => input)
+  assert.equal(validateContentBlocks(paper, [block])[0].mode, 'paper')
+})
+
+test('Markdown exports every richer definition, graph step, evidence state and calculated initial value', () => {
+  const markdown = renderContentMarkdown(validateContentBlocks(paper, [terms(), diagram(), evidence(), calculation()]))
+  for (const text of ['在本方法中的作用：', '易混概念区别：', '#### 节点分组', '#### 节点', '#### 有向关系',
+    'fact1 → entity1', '当前连线：origin', '固定段落预算：2', '#### 1. 修复前', '#### 2. 修复后',
+    '位置 2：d2', '位置 2：d3', '未覆盖关系：关系乙', '未覆盖关系：无', '候选得分：0.7300', '实际计算式：', '显示 4 位小数']) assert.ok(markdown.includes(text), text)
+  assert.equal((markdown.match(/构造示例（非论文原始样本）/g) ?? []).length, 3)
+  assert.equal((markdown.match(/第 1 页/g) ?? []).length, 4)
+  assert.ok(!markdown.includes(ref.quote), 'the exact original quote is never exposed by the teaching export')
 })

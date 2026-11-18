@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { test } from 'node:test'
 import { apply } from '../index.js'
-import { evidenceTexts, richDraft } from '../test-support/explanation-fixture.js'
+import { evidenceTexts, teachingDraft, teachingPlanFixture } from '../test-support/explanation-fixture.js'
 import { createPdf } from './fixtures/pdf.mjs'
 
 async function fixture(t, llm) {
@@ -32,7 +32,7 @@ async function fixture(t, llm) {
 
 function goodModel() {
   return { async *stream({ system }) {
-    const output = system.includes('事实审核员') ? { approved: true, issues: [] } : richDraft()
+    const output = system.includes('当前阶段：教学设计') ? teachingPlanFixture() : system.includes('事实审核员') ? { approved: true, issues: [] } : teachingDraft()
     yield { type: 'text-delta', text: JSON.stringify(output) }
     yield { type: 'finish', reason: { kind: 'stop' } }
   } }
@@ -67,8 +67,8 @@ test('import keeps source private, then manual generation persists reviewed expl
   const reopened = await (await request('papers?id=' + paper.id)).json()
   assert.equal(reopened.explanation.chapters.length, 7)
   assert.equal(reopened.explanation.model, 'test-model')
-  assert.equal(reopened.explanation.version, 2)
-  assert.equal(reopened.explanation.chapters[1].blocks[1].type, 'example')
+  assert.equal(reopened.explanation.version, 3)
+  assert.equal(reopened.explanation.chapters[1].blocks[2].type, 'example')
   assert.equal(reopened.explanation.chapters[5].blocks[1].data[1].value, 80)
   assert.match(reopened.explanation.chapters[0].markdown, /（第 1 页）/)
   assert.doesNotMatch(reopened.explanation.chapters[0].markdown, /https?:|source\?/)

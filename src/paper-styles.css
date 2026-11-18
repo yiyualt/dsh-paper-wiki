@@ -101,3 +101,7 @@
   .dsh-paper-wiki-history-item > svg { display: none; }
 }
 .dsh-paper-wiki-explanation-empty { padding-block: 10px; }
+
+.dsh-paper-wiki-lesson-section { min-width: 0; scroll-margin-top: 20px; }
+.dsh-paper-wiki-lesson-section + .dsh-paper-wiki-lesson-section { border-top: 1px solid var(--wiki-line); }
+.dsh-paper-wiki-lesson-section .dsh-paper-wiki-article-title:focus { outline: none; }

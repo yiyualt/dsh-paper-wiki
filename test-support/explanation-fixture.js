@@ -37,3 +37,39 @@ export function richDraft() {
     { id: 'analysis', blocks: [paragraph('提升集中于仅大小写不同的查询。两种方法都不能处理词语不同的改写；小规模、仅英语、人工设置的评测没有证明跨语言或真实流量泛化，也未测延迟和统计显著性。', 5)] },
   ] }
 }
+
+export function teachingPlanFixture() {
+  const concepts = [
+    ['查询', '用户希望匹配的商品标题字符串', '输入中的 PHONE', '决定要找哪个标题', 1],
+    ['候选商品', '可以被返回的带标识商品条目', 'p1 的标题是 phone', '提供待比较的标题和可返回ID', 1],
+    ['商品ID', '列表中用于指明具体商品的稳定标识', 'p1 与标题 phone 对应', '匹配后返回该标识而不是改写标题', 1],
+    ['小写归一化', '把大写字母转换为小写后再比较', 'PHONE 变为 phone', '消除只由大小写造成的不匹配', 2],
+    ['准确率', '正确返回标注商品的查询数占全部查询数的比例', '16条正确、总20条，得到80%', '对比同一评测集上的返回是否正确', 3],
+  ].map(([term, meaning, example, role, page]) => ({ term, meaning, example, role, references: [{ sourceId: `p${page}-s1` }] }))
+  return { task: '把商品标题查询变为首个匹配的商品ID；大小写不同会使直接比较漏掉目标。', concepts,
+    example: { mode: 'illustrative', question: 'PHONE能否找到标题phone的商品p1？', input: '查询PHONE，唯一候选p1标题phone。',
+      baseline: '直接比较PHONE与phone，不相同，返回null。', method: '双方转小写后比较，phone相同，返回p1。', output: 'product_id=p1。', references: [{ sourceId: 'p2-s1' }] },
+    visuals: [{ type: 'diagram', chapterId: 'method', question: '查询怎样经小写变换匹配到商品ID？' },
+      { type: 'calculation', chapterId: 'setup', question: '准确率怎样从正确数和总查询数计算？' },
+      { type: 'chart', chapterId: 'results', question: '同一固定查询集两种规则准确率有何不同？' }] }
+}
+
+export function teachingDraft() {
+  const value = richDraft(), plan = teachingPlanFixture()
+  const references = page => [{ page, quote: evidenceTexts[page - 1] }]
+  value.chapters[1].blocks.splice(1, 0, { type: 'terms', title: '先认清输入、对象和比较规则', references: references(1),
+    items: plan.concepts.map(({ term, meaning, example, role }) => ({ term, meaning, example, role })) })
+  value.chapters[3].blocks.push({ type: 'diagram', title: '同一查询从文本变为商品ID', mode: 'illustrative', description: '三列依次是输入、转换后的字符串和匹配结果。',
+    columns: [{ id: 'input', label: '输入' }, { id: 'normalized', label: '变换' }, { id: 'output', label: '输出' }],
+    nodes: [{ id: 'q', label: 'PHONE', detail: '查询字符串', column: 'input' }, { id: 'n', label: 'phone', detail: '转换为小写后的查询', column: 'normalized' },
+      { id: 'p', label: 'p1', detail: '标题phone匹配，返回ID p1', column: 'output' }],
+    edges: [{ id: 'lower', from: 'q', to: 'n', label: '转为小写' }, { id: 'match', from: 'n', to: 'p', label: '相同标题映射到ID' }],
+    steps: [{ label: '转换', explanation: '保留查询内容，只统一大小写。', activeNodes: ['q', 'n'], activeEdges: ['lower'] },
+      { label: '匹配', explanation: '与同样小写后的商品标题比较，返回对应ID。', activeNodes: ['n', 'p'], activeEdges: ['match'] }], references: references(2) })
+  value.chapters[4].blocks.push({ type: 'calculation', title: '用小计数算准确率', mode: 'illustrative', formula: '准确率 = 正确数 / 查询总数 × 100',
+    inputs: [{ id: 'correct', label: '正确数', meaning: '教学给定的正确返回数', value: 16, min: 0, max: 20, step: 1 },
+      { id: 'total', label: '总数', meaning: '参与评测的查询数', value: 20 }],
+    expression: { op: 'multiply', args: [{ op: 'divide', args: [{ input: 'correct' }, { input: 'total' }] }, { number: 100 }] },
+    precision: 1, resultLabel: '准确率（%）', interpretation: '给定16条正确、20条总查询，计算得80%；改动是教学计数，不是在重跑实验。', references: references(3) })
+  return value
+}

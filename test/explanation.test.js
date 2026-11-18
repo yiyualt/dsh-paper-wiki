@@ -1,18 +1,19 @@
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { test } from 'node:test'
-import { evidencePaper, richDraft } from '../test-support/explanation-fixture.js'
+import { evidencePaper, teachingDraft, teachingPlanFixture } from '../test-support/explanation-fixture.js'
 import { createEvidenceCatalog } from '../src/paper-evidence.js'
 import { generateExplanation, renderExplanation, validateExplanation } from '../src/paper-explanation.js'
 
 const paper = { ...evidencePaper, id: randomUUID() }
-const draft = richDraft
+const draft = teachingDraft
 function model(responses, observe = () => {}) {
+  responses = [teachingPlanFixture(), ...responses]
   return { async *stream(options) {
     observe(options)
     const value = responses.shift()
     if (value instanceof Error) throw value
-    yield { type: 'text-delta', text: JSON.stringify(value) }
+    yield { type: 'text-delta', text: typeof value?.raw === 'string' ? value.raw : JSON.stringify(value) }
     yield { type: 'finish', reason: { kind: 'stop' } }
   } }
 }
@@ -43,6 +44,9 @@ test('generates only after factual review and uses current provider selection fo
   assert.ok(calls.every(call => call.provider === 'configured' && call.reasoning === 'high'))
   assert.match(calls[0].messages[0].content[0].text, /PDF 第 2 页/)
   assert.match(calls[0].system, /不使用比喻或类比/)
+  assert.match(calls[0].system, /当前阶段：教学设计/)
+  assert.match(calls[1].system, /当前阶段：完整讲解/)
+  assert.match(calls[2].system, /事实与教学验收/)
 })
 
 test('review failure gets one revision and never publishes twice-rejected drafts', async () => {
@@ -50,8 +54,8 @@ test('review failure gets one revision and never publishes twice-rejected drafts
   const calls = []
   await assert.rejects(generateExplanation(model([draft(), rejected, { chapters: [draft().chapters.find(chapter => chapter.id === 'results')] }, rejected], option => calls.push(option)),
     { model: 'test' }, paper), error => error.code === 'explanation-review-failed')
-  assert.equal(calls.length, 4)
-  assert.match(calls[2].messages[0].content[0].text, /所引页面不支持/)
+  assert.equal(calls.length, 5)
+  assert.match(calls[3].messages[0].content[0].text, /所引页面不支持/)
 })
 
 test('material beyond the MVP context limit is rejected before any model request', async () => {
@@ -75,9 +79,9 @@ test('teaching coverage requires concrete examples, operations and comparable re
 
 test('rich explanation persists typed blocks and exports all steps without losing provenance', async () => {
   const result = await generateExplanation(model([draft(), { approved: true, issues: [] }]), { model: 'test' }, paper)
-  assert.equal(result.version, 2)
+  assert.equal(result.version, 3)
   const task = result.chapters.find(chapter => chapter.id === 'task')
-  assert.equal(task.blocks[1].steps.length, 3)
+  assert.equal(task.blocks[2].steps.length, 3)
   assert.match(task.markdown, /PHONE/)
   assert.match(task.markdown, /product_id/)
   assert.match(task.markdown, /论文实例/)
@@ -105,9 +109,9 @@ test('models select source IDs while the server supplies exact page text includi
   assert.equal(refs[0].page, 2)
   assert.match(refs[0].quote, /lower-\ncases/)
   assert.equal('sourceId' in refs[0], false, 'persisted canonical references remain backward compatible')
-  assert.match(calls[0].system, /不能自己编编号或抄写/)
+  assert.match(calls[0].system, /sourceId/)
   assert.match(calls[0].messages[0].content[0].text, /p2-s1/)
-  assert.match(calls[1].messages[0].content[0].text, /lower-\\ncases/, 'factual review receives the original server-resolved quotation')
+  assert.match(calls[2].messages[0].content[0].text, /lower-\\ncases/, 'factual review receives the original server-resolved quotation')
 })
 
 test('one repair request targets all invalid chapters and preserves every valid chapter', async () => {
@@ -116,13 +120,13 @@ test('one repair request targets all invalid chapters and preserves every valid 
   for (const id of ['baselines', 'setup']) first.chapters.find(chapter => chapter.id === id).blocks[0].references[0].sourceId = 'p99-s99'
   const patch = { chapters: fixed.chapters.filter(chapter => ['baselines', 'setup'].includes(chapter.id)) }
   const result = await generateExplanation(model([first, patch, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
-  assert.equal(calls.length, 3)
-  const prompt = calls[1].messages[0].content[0].text
+  assert.equal(calls.length, 4)
+  const prompt = calls[2].messages[0].content[0].text
   assert.match(prompt, /定向章节修复/)
   assert.match(prompt, /"id":"baselines"/)
   assert.match(prompt, /"id":"setup"/)
   assert.doesNotMatch(prompt, /"id":"overview"/)
-  assert.equal(calls[1].maxTokens, 16000)
+  assert.equal(calls[2].maxTokens, 16000)
   assert.equal(result.chapters[0].blocks[0].text, first.chapters[0].blocks[0].text)
 })
 
@@ -138,9 +142,50 @@ test('structured factual review issues repair only the specified chapter and sti
   const issue = { approved: false, issues: [{ chapterId: 'analysis', message: '请删除没有原文依据的泛化结论' }] }
   repaired.chapters[6].blocks[0].text = '评测仅使用固定的英语查询，无法证明真实流量表现。'
   const result = await generateExplanation(model([first, issue, { chapters: [repaired.chapters[6]] }, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
-  assert.equal(calls.length, 4)
-  assert.equal(calls[2].maxTokens, 8000)
-  assert.match(calls[2].messages[0].content[0].text, /"id":"analysis"/)
-  assert.doesNotMatch(calls[2].messages[0].content[0].text, /"id":"method"/)
+  assert.equal(calls.length, 5)
+  assert.equal(calls[3].maxTokens, 8000)
+  assert.match(calls[3].messages[0].content[0].text, /"id":"analysis"/)
+  assert.doesNotMatch(calls[3].messages[0].content[0].text, /"id":"method"/)
   assert.equal(result.chapters[6].blocks[0].text, repaired.chapters[6].blocks[0].text)
+})
+
+test('a malformed review is retried once without discarding or rewriting the completed lesson', async () => {
+  const calls = []
+  const result = await generateExplanation(model([draft(), { raw: '{' }, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
+  assert.equal(result.version, 3)
+  assert.equal(calls.length, 4)
+  assert.match(calls[2].system, /事实与教学验收/)
+  assert.match(calls[3].system, /事实与教学验收/)
+  assert.equal(calls[2].messages[0].content[0].text, calls[3].messages[0].content[0].text)
+})
+
+test('the teaching plan must be implemented as explanations and complementary visualizations', async () => {
+  const first = draft()
+  first.chapters[1].blocks = first.chapters[1].blocks.filter(block => block.type !== 'terms')
+  first.chapters[3].blocks = first.chapters[3].blocks.filter(block => block.type !== 'diagram')
+  const patch = { chapters: draft().chapters.filter(chapter => ['task', 'method'].includes(chapter.id)) }
+  const calls = []
+  const result = await generateExplanation(model([first, patch, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
+  assert.equal(calls.length, 4)
+  assert.match(calls[2].messages[0].content[0].text, /核心术语/)
+  assert.match(calls[2].messages[0].content[0].text, /diagram/)
+  assert.equal(result.chapters[1].blocks.find(block => block.type === 'terms').items.length, 5)
+})
+
+test('complete evidence comparisons can explain baseline execution without an obligatory table', async () => {
+  const value = draft()
+  const baseline = value.chapters.find(chapter => chapter.id === 'baselines')
+  baseline.blocks = [baseline.blocks[0], { ...value.chapters[1].blocks.find(block => block.type === 'example'), title: '基线的具体执行',
+    steps: [{ label: '输入', language: 'json', code: '{"query":"PHONE","title":"phone"}', explanation: '原始文字只有大小写差异。' },
+      { label: '基线输出', language: 'json', code: '{"output":null}', explanation: '大小写敏感比较不相等，基线没有返回商品。' }] }]
+  const result = await generateExplanation(model([value, { approved: true, issues: [] }]), { model: 'test' }, paper)
+  assert.equal(result.chapters[2].blocks[1].type, 'example')
+})
+
+test('repairs missing final JSON container delimiters but never invents an unfinished string or value', async () => {
+  const raw = JSON.stringify(draft()).slice(0, -2)
+  const result = await generateExplanation(model([{ raw }, { approved: true, issues: [] }]), { model: 'test' }, paper)
+  assert.equal(result.chapters.length, 7)
+  const incomplete = { raw: '{"chapters":[{"id":"overview","blocks":[{"type":"paragraph","text":"unfinished' }
+  await assert.rejects(generateExplanation(model([incomplete, incomplete]), { model: 'test' }, paper), error => error.code === 'explanation-invalid')
 })

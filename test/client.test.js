@@ -2,7 +2,8 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import { runInNewContext } from 'node:vm'
-import { richDraft } from '../test-support/explanation-fixture.js'
+import { richDraft, teachingDraft } from '../test-support/explanation-fixture.js'
+import { createPaperHtml } from '../src/paper-html.js'
 import { createPaperContentRenderer } from '../src/paper-blocks.js'
 import { createPaperGenerationProgress } from '../src/generation-progress.js'
 
@@ -31,7 +32,7 @@ async function fixture(respond) {
     window: { __ModuleLoader__: { load(value) { definition = value } } },
     document: { baseURI: 'http://localhost/dsh/', createElement() { const link = { click() { downloads.push({ ...link }) } }; return link } },
     URL: RuntimeURL, Intl, AbortController, AbortSignal, Blob, Date,
-    paperWikiStyles: '', createPaperGenerationProgress, createPaperContentRenderer,
+    paperWikiStyles: '', createPaperGenerationProgress, createPaperContentRenderer, createPaperHtml, paperExportStyles: '', paperExportBehavior: '',
     setTimeout(fn) { const id = ++timerId; timers.set(id, fn); return id }, clearTimeout(id) { timers.delete(id) },
     setInterval() { return 0 }, clearInterval() {},
     fetch: async (url, options = {}) => { const request = { url: new URL(url), ...options }; calls.push(request); return respond(request) },
@@ -439,5 +440,29 @@ test('new teaching chapters use the content renderer and reset step state across
   await app.store.openPaper(secondId)
   content = find(renderReader(app), node => node.type?.name === 'PaperContent')
   assert.notEqual(content.props.key, secondKey, 'regeneration also resets the selected step')
+  app.dispose()
+})
+
+test('skill lessons show every chapter continuously and export all teaching content as HTML', async () => {
+  const chapters = teachingDraft().chapters.map(chapter => ({ ...chapter, title: chapter.id, markdown: 'fallback' }))
+  const current = { ...firstPaper, explanation: { ...explainedPaper.explanation, version: 3, skill: 'paper-explainer', chapters } }
+  const app = await fixture(() => Response.json(current))
+  await app.store.openPaper(firstId)
+  const all = (node, predicate) => !node || typeof node !== 'object' ? [] : [...(predicate(node) ? [node] : []), ...(node.children || []).flatMap(child => all(child, predicate))]
+  let reader = renderReader(app)
+  assert.equal(all(reader, node => node.type?.name === 'PaperContent').length, 7)
+  app.store.selectChapter(6)
+  reader = renderReader(app)
+  assert.equal(all(reader, node => node.type?.name === 'PaperContent').length, 7, 'directory navigation must not hide examples in other chapters')
+  const exportButton = find(reader, node => node.type === 'button' && node.children.includes('导出 HTML'))
+  exportButton.props.onClick()
+  assert.equal(app.downloads[0].download, '论文-讲解.html')
+  const html = await app.downloadBlobs.get(app.downloads[0].href).text()
+  assert.match(html, /<!doctype html>/i)
+  assert.match(html, /PHONE/)
+  assert.match(html, /product_id/)
+  assert.match(html, /小写归一化/)
+  assert.match(html, /准确率/)
+  assert.doesNotMatch(html, /We study exact product-title retrieval/)
   app.dispose()
 })

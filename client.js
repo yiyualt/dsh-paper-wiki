@@ -1,5 +1,74 @@
 ;(() => {
-const paperWikiStyles = ".dsh-paper-wiki-page {\n  --wiki-paper: var(--dsw-alias-bg-base);\n  --wiki-canvas: color-mix(in srgb, var(--dsw-alias-bg-module-platform) 56%, var(--wiki-paper));\n  --wiki-ink: var(--dsw-alias-label-primary);\n  --wiki-muted: var(--dsw-alias-label-secondary);\n  --wiki-line: var(--dsw-alias-border-l2);\n  --wiki-accent: color-mix(in srgb, var(--dsw-alias-link) 77%, #6f52bf);\n  --wiki-accent-ink: color-mix(in srgb, var(--wiki-accent) 78%, var(--wiki-ink));\n  --wiki-accent-fill: color-mix(in srgb, var(--wiki-accent) 11%, transparent);\n  --wiki-accent-line: color-mix(in srgb, var(--wiki-accent) 19%, transparent);\n  --wiki-gutter: clamp(16px, 3.25vw, 48px);\n  flex: 1; min-width: 0; min-height: 0; overflow: auto;\n  background: var(--wiki-canvas); color: var(--wiki-ink); font-family: var(--dsw-font-family);\n}\n.dsh-paper-wiki-page * { box-sizing: border-box; }\n.dsh-paper-wiki-shell { max-width: 1344px; margin-inline: auto; padding: 0 var(--wiki-gutter) 48px; container: dsh-paper-wiki / inline-size; }\n.dsh-paper-wiki-bar { display: flex; align-items: center; justify-content: space-between; min-height: 68px; gap: 12px; border-bottom: 1px solid var(--wiki-line); margin-bottom: 24px; }\n.dsh-paper-wiki-page:not([data-reading]) .dsh-paper-wiki-bar { max-width: 860px; margin-inline: auto; }\n.dsh-paper-wiki-brand { display: inline-flex; align-items: center; gap: 11px; min-width: 0; margin: 0; color: var(--wiki-ink); font-size: 21px; font-weight: 690; line-height: 1.4; }\n.dsh-paper-wiki-brand-icon, .dsh-paper-wiki-history-icon { display: grid; place-items: center; flex: none; width: 37px; height: 37px; border-radius: 9px; background: var(--wiki-accent-fill); color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-breadcrumb { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; color: var(--wiki-muted); }\n.dsh-paper-wiki-breadcrumb > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--wiki-ink); font-weight: 650; }\n.dsh-paper-wiki-breadcrumb > svg { flex: none; }\n.dsh-paper-wiki-breadcrumb > button { flex: none; padding: 8px; margin-left: -8px; border: 0; border-radius: 7px; color: var(--wiki-accent-ink); background: transparent; font: inherit; font-weight: 630; cursor: pointer; }\n.dsh-paper-wiki-breadcrumb > button:hover { background: var(--wiki-accent-fill); }\n.dsh-paper-wiki-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }\n.dsh-paper-wiki-bar > .dsh-paper-wiki-actions { flex: none; }\n.dsh-paper-wiki-page button { font-family: inherit; }\n.dsh-paper-wiki-actions button, .dsh-paper-wiki-bar > button { min-height: 35px; border-radius: 8px; font-weight: 620; white-space: nowrap; }\n.dsh-paper-wiki-library, .dsh-paper-wiki-reading { display: grid; gap: 18px; min-width: 0; }\n.dsh-paper-wiki-library { max-width: 860px; margin-inline: auto; }\n.dsh-paper-wiki-history h2 { margin: 4px 0 10px; font-size: 15px; font-weight: 660; line-height: 1.5; }\n.dsh-paper-wiki-library-status { margin: 0 0 10px; color: var(--wiki-muted); font-size: 13px; }\n.dsh-paper-wiki-library-status[role='alert'] { color: var(--dsw-alias-state-error-primary); }\n.dsh-paper-wiki-library-empty { display: grid; justify-items: center; gap: 10px; padding: clamp(30px, 6cqi, 56px) 20px; border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); color: var(--wiki-muted); text-align: center; }\n.dsh-paper-wiki-library-empty p { margin: 0; color: var(--wiki-ink); font-size: 14px; font-weight: 600; }\n.dsh-paper-wiki-history-list { margin: 0; padding: 4px; border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); list-style: none; }\n.dsh-paper-wiki-history-row { display: grid; grid-template-columns: minmax(0, 1fr) 46px; align-items: center; gap: 1px; }\n.dsh-paper-wiki-history-row + .dsh-paper-wiki-history-row { border-top: 1px solid var(--wiki-line); }\n.dsh-paper-wiki-history-item { display: grid; grid-template-columns: 37px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 73px; padding: 10px 9px 10px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--wiki-muted); text-align: left; font: inherit; cursor: pointer; }\n.dsh-paper-wiki-history-item:hover, .dsh-paper-wiki-history-item[aria-busy='true'] { background: var(--wiki-accent-fill); }\n.dsh-paper-wiki-history-item[aria-busy='true'] { cursor: wait; }\n.dsh-paper-wiki-history-copy { display: grid; gap: 5px; min-width: 0; }\n.dsh-paper-wiki-history-copy strong { color: var(--wiki-ink); font-size: 14px; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }\n.dsh-paper-wiki-history-meta { display: flex; flex-wrap: wrap; gap: 3px 12px; font-size: 12px; line-height: 1.5; }\n.dsh-paper-wiki-ready { color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-delete { display: grid; place-items: center; justify-self: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--wiki-muted); cursor: pointer; }\n.dsh-paper-wiki-delete:hover { background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 9%, transparent); color: var(--dsw-alias-state-error-primary); }\n.dsh-paper-wiki-page button:disabled { cursor: not-allowed; opacity: .55; }\n.dsh-paper-wiki-form-card { padding: clamp(19px, 4cqi, 34px); border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); }\n.dsh-paper-wiki-form-title { margin: 0 0 19px; font-size: clamp(19px, 3cqi, 24px); font-weight: 680; line-height: 1.3; }\n.dsh-paper-wiki-form { display: flex; flex-wrap: wrap; align-items: end; gap: 11px; }\n.dsh-paper-wiki-form > button[type='submit'] { min-height: 38px; border-radius: 9px; font-weight: 600; }\n.dsh-paper-wiki-file-field { display: flex; flex: 1 1 220px; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; min-height: 38px; }\n.dsh-paper-wiki-file-field > span { min-width: 0; color: var(--wiki-muted); font-size: 13px; overflow-wrap: anywhere; }\n.dsh-paper-wiki-form-title:focus { outline: none; }\n.dsh-paper-wiki-feedback { margin: 0; padding: 11px 14px; border-radius: 9px; background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 8%, transparent); color: var(--dsw-alias-state-error-primary); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }\n.dsh-paper-wiki-confirm-delete { --dsw-alias-button-primary-fill: var(--dsw-alias-state-error-primary); --dsw-alias-button-primary-hover: var(--dsw-alias-state-error-primary); }\n.dsh-paper-wiki-error { color: var(--dsw-alias-state-error-primary); }\n.dsh-paper-wiki-reader { min-width: 0; }\n.dsh-paper-wiki-reader-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; padding: 4px 0 22px; }\n.dsh-paper-wiki-reader-heading > div:first-child { flex: 1 1 280px; min-width: 0; }\n.dsh-paper-wiki-eyebrow { margin: 0 0 8px; color: var(--wiki-accent-ink); font-size: 12px; font-weight: 600; }\n.dsh-paper-wiki-reader-heading h1 { margin: 0; color: var(--wiki-ink); font-size: clamp(23px, 3.2cqi, 34px); font-weight: 700; line-height: 1.3; letter-spacing: -.02em; overflow-wrap: anywhere; }\n.dsh-paper-wiki-reader-heading h1:focus { outline: none; }\n.dsh-paper-wiki-file-name { margin: 9px 0 0; color: var(--wiki-muted); font-size: 12px; overflow-wrap: anywhere; }\n.dsh-paper-wiki-warning { border: 1px solid var(--wiki-accent-line); border-radius: 9px; background: var(--wiki-accent-fill); padding: 10px 13px; margin-bottom: 16px; font-size: 12px; color: var(--wiki-muted); line-height: 1.65; }\n.dsh-paper-wiki-warning p { margin: 0; }\n.dsh-paper-wiki-warning p + p { margin-top: 6px; }\n.dsh-paper-wiki-columns { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 12px; }\n.dsh-paper-wiki-sidebar { min-width: 0; }\n.dsh-paper-wiki-rail-label, .dsh-paper-wiki-chapter-list { display: none; }\n.dsh-paper-wiki-rail-label { margin: 0 0 9px; padding-inline: 11px; font-size: 12px; font-weight: 650; color: var(--wiki-muted); }\n.dsh-paper-wiki-chapter-list { gap: 4px; padding: 0; margin: 0; list-style: none; }\n.dsh-paper-wiki-chapter-button { display: block; width: 100%; min-height: 38px; padding: 9px 11px; border: 0; border-radius: 7px; background: transparent; color: var(--wiki-muted); text-align: left; font: inherit; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; cursor: pointer; }\n.dsh-paper-wiki-chapter-button:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--wiki-ink); }\n.dsh-paper-wiki-chapter-button[aria-current='page'] { background: var(--wiki-accent-fill); color: var(--wiki-accent-ink); font-weight: 650; }\n.dsh-paper-wiki-chapter-picker { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--wiki-line); border-radius: 9px; background: var(--wiki-paper); font-size: 12px; color: var(--wiki-muted); }\n.dsh-paper-wiki-chapter-picker select { width: 100%; min-width: 0; min-height: 34px; padding: 4px 8px; border: 1px solid var(--wiki-line); border-radius: 7px; color: var(--wiki-ink); background: var(--wiki-canvas); font: inherit; }\n.dsh-paper-wiki-article { --wiki-reading-pad: clamp(17px, 3.3cqi, 35px); min-width: 0; border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); }\n.dsh-paper-wiki-article-header { padding: clamp(20px, 3.25cqi, 33px) var(--wiki-reading-pad) 23px; border-bottom: 1px solid var(--wiki-line); overflow-wrap: anywhere; }\n.dsh-paper-wiki-article-title { margin: 0; font-size: clamp(24px, 3.55cqi, 37px); line-height: 1.23; letter-spacing: -.026em; font-weight: 700; }\n.dsh-paper-wiki-meta { display: flex; flex-wrap: wrap; gap: 8px 13px; margin-top: 15px; font-size: 12px; line-height: 1.5; color: var(--wiki-muted); }\n.dsh-paper-wiki-prose { padding: 24px var(--wiki-reading-pad) 30px; min-width: 0; font-size: 15px; line-height: 1.85; overflow-wrap: anywhere; }\n.dsh-paper-wiki-prose a { color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-prose pre { max-width: 100%; overflow-x: auto; }\n.dsh-paper-wiki-prose table { display: block; max-width: 100%; overflow-x: auto; }\n.dsh-paper-wiki-prose :is(h1,h2,h3,h4) { line-height: 1.4; }\n.dsh-paper-wiki-page :is(button,input,select,summary,a):focus-visible { outline: 2px solid var(--wiki-accent); outline-offset: 2px; }\n@container dsh-paper-wiki (min-width: 705px) {\n  .dsh-paper-wiki-columns { grid-template-columns: minmax(165px, 210px) minmax(0, 1fr); gap: clamp(18px, 2.7cqi, 32px); }\n  .dsh-paper-wiki-sidebar { position: sticky; top: 20px; max-height: calc(100dvh - 90px); overflow-y: auto; padding: 12px 9px; border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); }\n  .dsh-paper-wiki-rail-label { display: block; }\n  .dsh-paper-wiki-chapter-list { display: grid; }\n  .dsh-paper-wiki-chapter-picker { display: none; }\n}\n@container dsh-paper-wiki (max-width: 440px) {\n  .dsh-paper-wiki-bar { min-height: 58px; margin-bottom: 16px; }\n  .dsh-paper-wiki-history-row { grid-template-columns: minmax(0, 1fr) 34px; }\n  .dsh-paper-wiki-history-item { gap: 8px; padding-left: 6px; }\n  .dsh-paper-wiki-history-item > svg { display: none; }\n}\n.dsh-paper-wiki-explanation-empty { padding-block: 10px; }\n\n.dsh-paper-wiki-generation {\n  position: relative;\n  padding: clamp(18px, 4cqi, 34px);\n  border: 1px solid var(--wiki-accent-line);\n  border-radius: 18px;\n  background: linear-gradient(145deg, color-mix(in srgb, var(--wiki-accent) 8%, var(--wiki-paper)), var(--wiki-paper) 65%);\n  box-shadow: 0 2px 5px rgb(16 25 56 / 4%);\n}\n\n.dsh-paper-wiki-generation-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 14px;\n}\n\n.dsh-paper-wiki-generation-header > div:first-child {\n  min-width: 0;\n}\n\n.dsh-paper-wiki-generation-repo {\n  margin: 0 0 6px;\n  color: var(--wiki-accent-ink);\n  font-family: var(--ds-font-family-code);\n  font-size: 13px;\n  font-weight: 600;\n  overflow-wrap: anywhere;\n}\n\n.dsh-paper-wiki-generation-header h2 {\n  margin: 0;\n  color: var(--wiki-ink);\n  font-size: clamp(20px, 4.3cqi, 30px);\n  font-weight: 680;\n  line-height: 1.25;\n}\n\n.dsh-paper-wiki-clock {\n  display: grid;\n  flex: none;\n  gap: 2px;\n  min-inline-size: 84px;\n  padding: 8px 12px;\n  border: 1px solid var(--wiki-accent-line);\n  border-radius: 12px;\n  background: var(--wiki-paper);\n  color: var(--wiki-muted);\n  text-align: center;\n  font-size: 11px;\n  line-height: 1.4;\n}\n\n.dsh-paper-wiki-clock time {\n  color: var(--wiki-accent-ink);\n  font-family: var(--ds-font-family-code);\n  font-size: clamp(20px, 4.4cqi, 26px);\n  font-variant-numeric: tabular-nums;\n  font-weight: 650;\n  line-height: 1.2;\n}\n\n.dsh-paper-wiki-progressbar {\n  position: relative;\n  block-size: 10px;\n  margin-block-start: 26px;\n  overflow: hidden;\n  border-radius: 999px;\n  background: color-mix(in srgb, var(--wiki-accent) 17%, var(--wiki-paper));\n}\n\n.dsh-paper-wiki-progressbar::before {\n  content: '';\n  position: absolute;\n  inset-block: 0;\n  inline-size: 36%;\n  border-radius: inherit;\n  background: linear-gradient(90deg, var(--wiki-accent-ink), var(--wiki-accent));\n  animation: dsh-paper-wiki-progress 1.9s ease-in-out infinite alternate;\n}\n\n@keyframes dsh-paper-wiki-progress {\n  from { transform: translateX(0); }\n  to { transform: translateX(178%); }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .dsh-paper-wiki-progressbar::before {\n    inline-size: 100%;\n    animation: none;\n    background: repeating-linear-gradient(135deg, var(--wiki-accent) 0 10px, transparent 10px 20px);\n  }\n}\n\n.dsh-paper-wiki-generation-stages {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: clamp(8px, 2cqi, 18px);\n  margin: 13px 0 0;\n  padding: 0;\n  list-style: none;\n}\n\n.dsh-paper-wiki-generation-stages li {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--wiki-muted);\n  font-size: 12px;\n  line-height: 1.4;\n}\n\n.dsh-paper-wiki-stage-marker {\n  box-sizing: border-box;\n  display: grid;\n  place-items: center;\n  flex-shrink: 0;\n  inline-size: 16px;\n  block-size: 16px;\n  border: 1px solid currentColor;\n  border-radius: 50%;\n  opacity: 0.55;\n}\n\n.dsh-paper-wiki-generation-stages li[data-state='done'] .dsh-paper-wiki-stage-marker {\n  border-color: transparent;\n  background: var(--wiki-accent-fill);\n  color: var(--wiki-accent-ink);\n  opacity: 1;\n}\n\n.dsh-paper-wiki-generation-stages li[data-state='active'] {\n  color: var(--wiki-accent-ink);\n  font-weight: 700;\n}\n\n.dsh-paper-wiki-generation-stages li[data-state='active'] .dsh-paper-wiki-stage-marker {\n  border: 5px solid var(--wiki-accent);\n  opacity: 1;\n}\n\n.dsh-paper-wiki-generation-detail,\n.dsh-paper-wiki-generation-background {\n  margin: 19px 0 0;\n  color: var(--wiki-muted);\n  font-size: 13px;\n  line-height: 1.55;\n}\n\n.dsh-paper-wiki-generation-background {\n  margin-block-start: 4px;\n  font-size: 12px;\n}\n\n.dsh-paper-wiki-generation-done {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 12px 14px;\n  border: 1px solid var(--wiki-accent-line);\n  border-radius: 12px;\n  background: var(--wiki-accent-fill);\n}\n\n.dsh-paper-wiki-generation-done p {\n  display: flex;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 4px 7px;\n  min-width: 0;\n  margin: 0;\n  color: var(--wiki-accent-ink);\n  font-size: 13px;\n  font-weight: 650;\n}\n\n.dsh-paper-wiki-generation-done p span {\n  color: var(--wiki-muted);\n  font-size: 12px;\n  font-weight: 400;\n  overflow-wrap: anywhere;\n}\n\n.dsh-paper-wiki-generation-done button {\n  flex: none;\n}\n\n.dsh-paper-wiki-generation-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-block-start: 16px;\n}\n\n.dsh-paper-wiki-generation-done[data-state='failed'] p {\n  color: var(--dsw-alias-state-error-primary);\n}\n\n.dsh-paper-wiki-content-paragraph { margin: 0 0 19px; white-space: pre-line; }\n.dsh-paper-wiki-content-references { color: var(--wiki-muted); font-size: 12px; font-weight: 400; white-space: normal; }\n.dsh-paper-wiki-content-block { min-width: 0; margin: 24px 0; padding: 19px; border: 1px solid var(--wiki-line); border-radius: 10px; background: var(--wiki-paper); }\n.dsh-paper-wiki-content-block > .dsh-paper-wiki-content-references { display: block; margin-top: 12px; line-height: 1.5; }\n.dsh-paper-wiki-content-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 15px; }\n.dsh-paper-wiki-content-heading h3,\n.dsh-paper-wiki-content-title { margin: 0; color: var(--wiki-ink); font-size: 16px; font-weight: 650; line-height: 1.5; }\n.dsh-paper-wiki-example-mode { color: var(--wiki-muted); font-size: 12px; line-height: 1.5; }\n.dsh-paper-wiki-content-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 13px; }\n.dsh-paper-wiki-content-tabs > button { min-width: 0; max-width: 100%; min-height: 33px; padding: 6px 11px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--wiki-muted); font: inherit; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; cursor: pointer; }\n.dsh-paper-wiki-content-tabs > button:hover { background: var(--wiki-canvas); color: var(--wiki-ink); }\n.dsh-paper-wiki-content-tabs > button[aria-selected='true'] { border-color: var(--wiki-accent-line); background: var(--wiki-accent-fill); color: var(--wiki-accent-ink); font-weight: 650; }\n.dsh-paper-wiki-example-panel { min-width: 0; }\n.dsh-paper-wiki-example-code { min-width: 0; max-width: 100%; overflow-x: auto; border: 1px solid var(--wiki-line); border-radius: 8px; background: var(--wiki-canvas); font-size: 13px; line-height: 1.7; }\n.dsh-paper-wiki-example-code pre { margin: 0; white-space: pre; overflow-wrap: normal; word-break: normal; }\n.dsh-paper-wiki-prose .dsh-paper-wiki-example-code pre code { font-family: var(--ds-font-family-code); font-size: 13px; line-height: 1.7; white-space: pre; overflow-wrap: normal; word-break: normal; }\n.dsh-paper-wiki-example-explanation { margin: 12px 0 0; color: var(--wiki-ink); font-size: 13px; line-height: 1.8; white-space: pre-line; }\n.dsh-paper-wiki-flow-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 15px 0; }\n.dsh-paper-wiki-flow-steps > button { display: flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; min-height: 39px; padding: 8px 10px; border: 1px solid var(--wiki-line); border-radius: 8px; background: var(--wiki-canvas); color: var(--wiki-muted); font: inherit; font-size: 12px; line-height: 1.5; text-align: left; overflow-wrap: anywhere; cursor: pointer; }\n.dsh-paper-wiki-flow-steps > button:hover { border-color: var(--wiki-accent-line); color: var(--wiki-ink); }\n.dsh-paper-wiki-flow-steps > button[aria-selected='true'] { border-color: var(--wiki-accent-line); background: var(--wiki-accent-fill); color: var(--wiki-accent-ink); font-weight: 650; }\n.dsh-paper-wiki-flow-number { display: grid; place-items: center; flex: none; width: 21px; height: 21px; border-radius: 50%; background: var(--wiki-paper); font-family: var(--ds-font-family-code); font-size: 11px; font-weight: 600; }\n.dsh-paper-wiki-flow-arrow { color: var(--wiki-muted); font-size: 15px; }\n.dsh-paper-wiki-flow-panel { padding: 14px 16px; border: 1px solid var(--wiki-line); border-radius: 8px; background: var(--wiki-canvas); }\n.dsh-paper-wiki-flow-panel dl { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px 14px; margin: 0; font-size: 13px; line-height: 1.75; }\n.dsh-paper-wiki-flow-panel dt { margin: 0; color: var(--wiki-muted); font-size: 12px; font-weight: 600; }\n.dsh-paper-wiki-flow-panel dd { min-width: 0; margin: 0; color: var(--wiki-ink); white-space: pre-line; overflow-wrap: anywhere; }\n.dsh-paper-wiki-table-scroll { max-width: 100%; overflow-x: auto; }\n.dsh-paper-wiki-content-table table { display: table; width: 100%; max-width: none; border-collapse: collapse; font-size: 13px; line-height: 1.65; }\n.dsh-paper-wiki-content-table caption { padding: 0 0 14px; color: var(--wiki-ink); font-size: 16px; font-weight: 650; line-height: 1.5; text-align: left; }\n.dsh-paper-wiki-content-table th { background: var(--wiki-canvas); color: var(--wiki-ink); font-size: 12px; font-weight: 650; text-align: left; vertical-align: top; }\n.dsh-paper-wiki-content-table th,\n.dsh-paper-wiki-content-table td { min-width: 85px; padding: 10px 12px; border: 1px solid var(--wiki-line); overflow-wrap: anywhere; }\n.dsh-paper-wiki-content-table td { color: var(--wiki-ink); vertical-align: top; }\n.dsh-paper-wiki-content-chart { margin-inline: 0; }\n.dsh-paper-wiki-chart-context { margin: 8px 0 0; color: var(--wiki-muted); font-size: 13px; line-height: 1.7; }\n.dsh-paper-wiki-chart-metric { margin: 9px 0 17px; color: var(--wiki-muted); font-size: 12px; line-height: 1.5; }\n.dsh-paper-wiki-chart-data { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }\n.dsh-paper-wiki-chart-data li { min-width: 0; }\n.dsh-paper-wiki-chart-row-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 10px; margin-bottom: 6px; font-size: 13px; line-height: 1.65; }\n.dsh-paper-wiki-chart-row-heading > span:first-child { min-width: 0; overflow-wrap: anywhere; }\n.dsh-paper-wiki-chart-value { flex: none; max-width: 100%; font-family: var(--ds-font-family-code); font-variant-numeric: tabular-nums; color: var(--wiki-ink); overflow-wrap: anywhere; }\n.dsh-paper-wiki-chart-value .dsh-paper-wiki-content-references { margin-left: 5px; font-family: var(--dsw-font-family); font-size: 11px; }\n.dsh-paper-wiki-chart-track { position: relative; height: 12px; overflow: visible; border-radius: 3px; background: var(--wiki-canvas); }\n.dsh-paper-wiki-chart-fill { position: absolute; top: 0; bottom: 0; border-radius: 2px; background: var(--wiki-accent); }\n.dsh-paper-wiki-chart-fill[data-negative] { background: color-mix(in srgb, var(--wiki-accent) 55%, var(--wiki-muted)); }\n.dsh-paper-wiki-chart-zero { position: absolute; top: -2px; bottom: -2px; width: 1px; background: color-mix(in srgb, var(--wiki-ink) 48%, transparent); }\n.dsh-paper-wiki-chart-axis { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; color: var(--wiki-muted); font-family: var(--ds-font-family-code); font-size: 11px; line-height: 1.5; }\n.dsh-paper-wiki-chart-axis > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }\n.dsh-paper-wiki-chart-axis > span + span { text-align: right; }\n.dsh-paper-wiki-content-block :is(button,[tabindex]):focus-visible { outline: 2px solid var(--wiki-accent); outline-offset: 3px; }\n@container dsh-paper-wiki (max-width: 440px) {\n  .dsh-paper-wiki-content-block { padding: 14px; }\n  .dsh-paper-wiki-flow-steps { gap: 6px; }\n  .dsh-paper-wiki-chart-row-heading { flex-wrap: wrap; gap: 2px 10px; }\n  .dsh-paper-wiki-content-table th, .dsh-paper-wiki-content-table td { padding: 8px; }\n}\n@media (pointer: coarse) {\n  .dsh-paper-wiki-content-tabs > button,\n  .dsh-paper-wiki-flow-steps > button { min-height: 44px; }\n}\n"
+const paperWikiStyles = ".dsh-paper-wiki-page {\n  --wiki-paper: var(--dsw-alias-bg-base);\n  --wiki-canvas: color-mix(in srgb, var(--dsw-alias-bg-module-platform) 56%, var(--wiki-paper));\n  --wiki-ink: var(--dsw-alias-label-primary);\n  --wiki-muted: var(--dsw-alias-label-secondary);\n  --wiki-line: var(--dsw-alias-border-l2);\n  --wiki-accent: color-mix(in srgb, var(--dsw-alias-link) 77%, #6f52bf);\n  --wiki-accent-ink: color-mix(in srgb, var(--wiki-accent) 78%, var(--wiki-ink));\n  --wiki-accent-fill: color-mix(in srgb, var(--wiki-accent) 11%, transparent);\n  --wiki-accent-line: color-mix(in srgb, var(--wiki-accent) 19%, transparent);\n  --wiki-gutter: clamp(16px, 3.25vw, 48px);\n  flex: 1; min-width: 0; min-height: 0; overflow: auto;\n  background: var(--wiki-canvas); color: var(--wiki-ink); font-family: var(--dsw-font-family);\n}\n.dsh-paper-wiki-page * { box-sizing: border-box; }\n.dsh-paper-wiki-shell { max-width: 1344px; margin-inline: auto; padding: 0 var(--wiki-gutter) 48px; container: dsh-paper-wiki / inline-size; }\n.dsh-paper-wiki-bar { display: flex; align-items: center; justify-content: space-between; min-height: 68px; gap: 12px; border-bottom: 1px solid var(--wiki-line); margin-bottom: 24px; }\n.dsh-paper-wiki-page:not([data-reading]) .dsh-paper-wiki-bar { max-width: 860px; margin-inline: auto; }\n.dsh-paper-wiki-brand { display: inline-flex; align-items: center; gap: 11px; min-width: 0; margin: 0; color: var(--wiki-ink); font-size: 21px; font-weight: 690; line-height: 1.4; }\n.dsh-paper-wiki-brand-icon, .dsh-paper-wiki-history-icon { display: grid; place-items: center; flex: none; width: 37px; height: 37px; border-radius: 9px; background: var(--wiki-accent-fill); color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-breadcrumb { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; color: var(--wiki-muted); }\n.dsh-paper-wiki-breadcrumb > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--wiki-ink); font-weight: 650; }\n.dsh-paper-wiki-breadcrumb > svg { flex: none; }\n.dsh-paper-wiki-breadcrumb > button { flex: none; padding: 8px; margin-left: -8px; border: 0; border-radius: 7px; color: var(--wiki-accent-ink); background: transparent; font: inherit; font-weight: 630; cursor: pointer; }\n.dsh-paper-wiki-breadcrumb > button:hover { background: var(--wiki-accent-fill); }\n.dsh-paper-wiki-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }\n.dsh-paper-wiki-bar > .dsh-paper-wiki-actions { flex: none; }\n.dsh-paper-wiki-page button { font-family: inherit; }\n.dsh-paper-wiki-actions button, .dsh-paper-wiki-bar > button { min-height: 35px; border-radius: 8px; font-weight: 620; white-space: nowrap; }\n.dsh-paper-wiki-library, .dsh-paper-wiki-reading { display: grid; gap: 18px; min-width: 0; }\n.dsh-paper-wiki-library { max-width: 860px; margin-inline: auto; }\n.dsh-paper-wiki-history h2 { margin: 4px 0 10px; font-size: 15px; font-weight: 660; line-height: 1.5; }\n.dsh-paper-wiki-library-status { margin: 0 0 10px; color: var(--wiki-muted); font-size: 13px; }\n.dsh-paper-wiki-library-status[role='alert'] { color: var(--dsw-alias-state-error-primary); }\n.dsh-paper-wiki-library-empty { display: grid; justify-items: center; gap: 10px; padding: clamp(30px, 6cqi, 56px) 20px; border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); color: var(--wiki-muted); text-align: center; }\n.dsh-paper-wiki-library-empty p { margin: 0; color: var(--wiki-ink); font-size: 14px; font-weight: 600; }\n.dsh-paper-wiki-history-list { margin: 0; padding: 4px; border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); list-style: none; }\n.dsh-paper-wiki-history-row { display: grid; grid-template-columns: minmax(0, 1fr) 46px; align-items: center; gap: 1px; }\n.dsh-paper-wiki-history-row + .dsh-paper-wiki-history-row { border-top: 1px solid var(--wiki-line); }\n.dsh-paper-wiki-history-item { display: grid; grid-template-columns: 37px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 73px; padding: 10px 9px 10px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--wiki-muted); text-align: left; font: inherit; cursor: pointer; }\n.dsh-paper-wiki-history-item:hover, .dsh-paper-wiki-history-item[aria-busy='true'] { background: var(--wiki-accent-fill); }\n.dsh-paper-wiki-history-item[aria-busy='true'] { cursor: wait; }\n.dsh-paper-wiki-history-copy { display: grid; gap: 5px; min-width: 0; }\n.dsh-paper-wiki-history-copy strong { color: var(--wiki-ink); font-size: 14px; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }\n.dsh-paper-wiki-history-meta { display: flex; flex-wrap: wrap; gap: 3px 12px; font-size: 12px; line-height: 1.5; }\n.dsh-paper-wiki-ready { color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-delete { display: grid; place-items: center; justify-self: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--wiki-muted); cursor: pointer; }\n.dsh-paper-wiki-delete:hover { background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 9%, transparent); color: var(--dsw-alias-state-error-primary); }\n.dsh-paper-wiki-page button:disabled { cursor: not-allowed; opacity: .55; }\n.dsh-paper-wiki-form-card { padding: clamp(19px, 4cqi, 34px); border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); }\n.dsh-paper-wiki-form-title { margin: 0 0 19px; font-size: clamp(19px, 3cqi, 24px); font-weight: 680; line-height: 1.3; }\n.dsh-paper-wiki-form { display: flex; flex-wrap: wrap; align-items: end; gap: 11px; }\n.dsh-paper-wiki-form > button[type='submit'] { min-height: 38px; border-radius: 9px; font-weight: 600; }\n.dsh-paper-wiki-file-field { display: flex; flex: 1 1 220px; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; min-height: 38px; }\n.dsh-paper-wiki-file-field > span { min-width: 0; color: var(--wiki-muted); font-size: 13px; overflow-wrap: anywhere; }\n.dsh-paper-wiki-form-title:focus { outline: none; }\n.dsh-paper-wiki-feedback { margin: 0; padding: 11px 14px; border-radius: 9px; background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 8%, transparent); color: var(--dsw-alias-state-error-primary); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }\n.dsh-paper-wiki-confirm-delete { --dsw-alias-button-primary-fill: var(--dsw-alias-state-error-primary); --dsw-alias-button-primary-hover: var(--dsw-alias-state-error-primary); }\n.dsh-paper-wiki-error { color: var(--dsw-alias-state-error-primary); }\n.dsh-paper-wiki-reader { min-width: 0; }\n.dsh-paper-wiki-reader-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; padding: 4px 0 22px; }\n.dsh-paper-wiki-reader-heading > div:first-child { flex: 1 1 280px; min-width: 0; }\n.dsh-paper-wiki-eyebrow { margin: 0 0 8px; color: var(--wiki-accent-ink); font-size: 12px; font-weight: 600; }\n.dsh-paper-wiki-reader-heading h1 { margin: 0; color: var(--wiki-ink); font-size: clamp(23px, 3.2cqi, 34px); font-weight: 700; line-height: 1.3; letter-spacing: -.02em; overflow-wrap: anywhere; }\n.dsh-paper-wiki-reader-heading h1:focus { outline: none; }\n.dsh-paper-wiki-file-name { margin: 9px 0 0; color: var(--wiki-muted); font-size: 12px; overflow-wrap: anywhere; }\n.dsh-paper-wiki-warning { border: 1px solid var(--wiki-accent-line); border-radius: 9px; background: var(--wiki-accent-fill); padding: 10px 13px; margin-bottom: 16px; font-size: 12px; color: var(--wiki-muted); line-height: 1.65; }\n.dsh-paper-wiki-warning p { margin: 0; }\n.dsh-paper-wiki-warning p + p { margin-top: 6px; }\n.dsh-paper-wiki-columns { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 12px; }\n.dsh-paper-wiki-sidebar { min-width: 0; }\n.dsh-paper-wiki-rail-label, .dsh-paper-wiki-chapter-list { display: none; }\n.dsh-paper-wiki-rail-label { margin: 0 0 9px; padding-inline: 11px; font-size: 12px; font-weight: 650; color: var(--wiki-muted); }\n.dsh-paper-wiki-chapter-list { gap: 4px; padding: 0; margin: 0; list-style: none; }\n.dsh-paper-wiki-chapter-button { display: block; width: 100%; min-height: 38px; padding: 9px 11px; border: 0; border-radius: 7px; background: transparent; color: var(--wiki-muted); text-align: left; font: inherit; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; cursor: pointer; }\n.dsh-paper-wiki-chapter-button:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--wiki-ink); }\n.dsh-paper-wiki-chapter-button[aria-current='page'] { background: var(--wiki-accent-fill); color: var(--wiki-accent-ink); font-weight: 650; }\n.dsh-paper-wiki-chapter-picker { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--wiki-line); border-radius: 9px; background: var(--wiki-paper); font-size: 12px; color: var(--wiki-muted); }\n.dsh-paper-wiki-chapter-picker select { width: 100%; min-width: 0; min-height: 34px; padding: 4px 8px; border: 1px solid var(--wiki-line); border-radius: 7px; color: var(--wiki-ink); background: var(--wiki-canvas); font: inherit; }\n.dsh-paper-wiki-article { --wiki-reading-pad: clamp(17px, 3.3cqi, 35px); min-width: 0; border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); }\n.dsh-paper-wiki-article-header { padding: clamp(20px, 3.25cqi, 33px) var(--wiki-reading-pad) 23px; border-bottom: 1px solid var(--wiki-line); overflow-wrap: anywhere; }\n.dsh-paper-wiki-article-title { margin: 0; font-size: clamp(24px, 3.55cqi, 37px); line-height: 1.23; letter-spacing: -.026em; font-weight: 700; }\n.dsh-paper-wiki-meta { display: flex; flex-wrap: wrap; gap: 8px 13px; margin-top: 15px; font-size: 12px; line-height: 1.5; color: var(--wiki-muted); }\n.dsh-paper-wiki-prose { padding: 24px var(--wiki-reading-pad) 30px; min-width: 0; font-size: 15px; line-height: 1.85; overflow-wrap: anywhere; }\n.dsh-paper-wiki-prose a { color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-prose pre { max-width: 100%; overflow-x: auto; }\n.dsh-paper-wiki-prose table { display: block; max-width: 100%; overflow-x: auto; }\n.dsh-paper-wiki-prose :is(h1,h2,h3,h4) { line-height: 1.4; }\n.dsh-paper-wiki-page :is(button,input,select,summary,a):focus-visible { outline: 2px solid var(--wiki-accent); outline-offset: 2px; }\n@container dsh-paper-wiki (min-width: 705px) {\n  .dsh-paper-wiki-columns { grid-template-columns: minmax(165px, 210px) minmax(0, 1fr); gap: clamp(18px, 2.7cqi, 32px); }\n  .dsh-paper-wiki-sidebar { position: sticky; top: 20px; max-height: calc(100dvh - 90px); overflow-y: auto; padding: 12px 9px; border: 1px solid var(--wiki-line); border-radius: 12px; background: var(--wiki-paper); }\n  .dsh-paper-wiki-rail-label { display: block; }\n  .dsh-paper-wiki-chapter-list { display: grid; }\n  .dsh-paper-wiki-chapter-picker { display: none; }\n}\n@container dsh-paper-wiki (max-width: 440px) {\n  .dsh-paper-wiki-bar { min-height: 58px; margin-bottom: 16px; }\n  .dsh-paper-wiki-history-row { grid-template-columns: minmax(0, 1fr) 34px; }\n  .dsh-paper-wiki-history-item { gap: 8px; padding-left: 6px; }\n  .dsh-paper-wiki-history-item > svg { display: none; }\n}\n.dsh-paper-wiki-explanation-empty { padding-block: 10px; }\n\n.dsh-paper-wiki-lesson-section { min-width: 0; scroll-margin-top: 20px; }\n.dsh-paper-wiki-lesson-section + .dsh-paper-wiki-lesson-section { border-top: 1px solid var(--wiki-line); }\n.dsh-paper-wiki-lesson-section .dsh-paper-wiki-article-title:focus { outline: none; }\n\n.dsh-paper-wiki-generation {\n  position: relative;\n  padding: clamp(18px, 4cqi, 34px);\n  border: 1px solid var(--wiki-accent-line);\n  border-radius: 18px;\n  background: linear-gradient(145deg, color-mix(in srgb, var(--wiki-accent) 8%, var(--wiki-paper)), var(--wiki-paper) 65%);\n  box-shadow: 0 2px 5px rgb(16 25 56 / 4%);\n}\n\n.dsh-paper-wiki-generation-header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 14px;\n}\n\n.dsh-paper-wiki-generation-header > div:first-child {\n  min-width: 0;\n}\n\n.dsh-paper-wiki-generation-repo {\n  margin: 0 0 6px;\n  color: var(--wiki-accent-ink);\n  font-family: var(--ds-font-family-code);\n  font-size: 13px;\n  font-weight: 600;\n  overflow-wrap: anywhere;\n}\n\n.dsh-paper-wiki-generation-header h2 {\n  margin: 0;\n  color: var(--wiki-ink);\n  font-size: clamp(20px, 4.3cqi, 30px);\n  font-weight: 680;\n  line-height: 1.25;\n}\n\n.dsh-paper-wiki-clock {\n  display: grid;\n  flex: none;\n  gap: 2px;\n  min-inline-size: 84px;\n  padding: 8px 12px;\n  border: 1px solid var(--wiki-accent-line);\n  border-radius: 12px;\n  background: var(--wiki-paper);\n  color: var(--wiki-muted);\n  text-align: center;\n  font-size: 11px;\n  line-height: 1.4;\n}\n\n.dsh-paper-wiki-clock time {\n  color: var(--wiki-accent-ink);\n  font-family: var(--ds-font-family-code);\n  font-size: clamp(20px, 4.4cqi, 26px);\n  font-variant-numeric: tabular-nums;\n  font-weight: 650;\n  line-height: 1.2;\n}\n\n.dsh-paper-wiki-progressbar {\n  position: relative;\n  block-size: 10px;\n  margin-block-start: 26px;\n  overflow: hidden;\n  border-radius: 999px;\n  background: color-mix(in srgb, var(--wiki-accent) 17%, var(--wiki-paper));\n}\n\n.dsh-paper-wiki-progressbar::before {\n  content: '';\n  position: absolute;\n  inset-block: 0;\n  inline-size: 36%;\n  border-radius: inherit;\n  background: linear-gradient(90deg, var(--wiki-accent-ink), var(--wiki-accent));\n  animation: dsh-paper-wiki-progress 1.9s ease-in-out infinite alternate;\n}\n\n@keyframes dsh-paper-wiki-progress {\n  from { transform: translateX(0); }\n  to { transform: translateX(178%); }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .dsh-paper-wiki-progressbar::before {\n    inline-size: 100%;\n    animation: none;\n    background: repeating-linear-gradient(135deg, var(--wiki-accent) 0 10px, transparent 10px 20px);\n  }\n}\n\n.dsh-paper-wiki-generation-stages {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: clamp(8px, 2cqi, 18px);\n  margin: 13px 0 0;\n  padding: 0;\n  list-style: none;\n}\n\n.dsh-paper-wiki-generation-stages li {\n  display: flex;\n  align-items: center;\n  gap: 6px;\n  color: var(--wiki-muted);\n  font-size: 12px;\n  line-height: 1.4;\n}\n\n.dsh-paper-wiki-stage-marker {\n  box-sizing: border-box;\n  display: grid;\n  place-items: center;\n  flex-shrink: 0;\n  inline-size: 16px;\n  block-size: 16px;\n  border: 1px solid currentColor;\n  border-radius: 50%;\n  opacity: 0.55;\n}\n\n.dsh-paper-wiki-generation-stages li[data-state='done'] .dsh-paper-wiki-stage-marker {\n  border-color: transparent;\n  background: var(--wiki-accent-fill);\n  color: var(--wiki-accent-ink);\n  opacity: 1;\n}\n\n.dsh-paper-wiki-generation-stages li[data-state='active'] {\n  color: var(--wiki-accent-ink);\n  font-weight: 700;\n}\n\n.dsh-paper-wiki-generation-stages li[data-state='active'] .dsh-paper-wiki-stage-marker {\n  border: 5px solid var(--wiki-accent);\n  opacity: 1;\n}\n\n.dsh-paper-wiki-generation-detail,\n.dsh-paper-wiki-generation-background {\n  margin: 19px 0 0;\n  color: var(--wiki-muted);\n  font-size: 13px;\n  line-height: 1.55;\n}\n\n.dsh-paper-wiki-generation-background {\n  margin-block-start: 4px;\n  font-size: 12px;\n}\n\n.dsh-paper-wiki-generation-done {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 12px 14px;\n  border: 1px solid var(--wiki-accent-line);\n  border-radius: 12px;\n  background: var(--wiki-accent-fill);\n}\n\n.dsh-paper-wiki-generation-done p {\n  display: flex;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 4px 7px;\n  min-width: 0;\n  margin: 0;\n  color: var(--wiki-accent-ink);\n  font-size: 13px;\n  font-weight: 650;\n}\n\n.dsh-paper-wiki-generation-done p span {\n  color: var(--wiki-muted);\n  font-size: 12px;\n  font-weight: 400;\n  overflow-wrap: anywhere;\n}\n\n.dsh-paper-wiki-generation-done button {\n  flex: none;\n}\n\n.dsh-paper-wiki-generation-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-block-start: 16px;\n}\n\n.dsh-paper-wiki-generation-done[data-state='failed'] p {\n  color: var(--dsw-alias-state-error-primary);\n}\n\n.dsh-paper-wiki-content-paragraph { margin: 0 0 19px; white-space: pre-line; }\n.dsh-paper-wiki-content-references { color: var(--wiki-muted); font-size: 12px; font-weight: 400; white-space: normal; }\n.dsh-paper-wiki-content-block { min-width: 0; margin: 24px 0; padding: 19px; border: 1px solid var(--wiki-line); border-radius: 10px; background: var(--wiki-paper); }\n.dsh-paper-wiki-content-block > .dsh-paper-wiki-content-references { display: block; margin-top: 12px; line-height: 1.5; }\n.dsh-paper-wiki-content-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 15px; }\n.dsh-paper-wiki-content-heading h3,\n.dsh-paper-wiki-content-title { margin: 0; color: var(--wiki-ink); font-size: 16px; font-weight: 650; line-height: 1.5; }\n.dsh-paper-wiki-example-mode { color: var(--wiki-muted); font-size: 12px; line-height: 1.5; }\n.dsh-paper-wiki-example-panel { min-width: 0; }\n.dsh-paper-wiki-example-code { min-width: 0; max-width: 100%; overflow-x: auto; border: 1px solid var(--wiki-line); border-radius: 8px; background: var(--wiki-canvas); font-size: 13px; line-height: 1.7; }\n.dsh-paper-wiki-example-code pre { margin: 0; white-space: pre; overflow-wrap: normal; word-break: normal; }\n.dsh-paper-wiki-prose .dsh-paper-wiki-example-code pre code { font-family: var(--ds-font-family-code); font-size: 13px; line-height: 1.7; white-space: pre; overflow-wrap: normal; word-break: normal; }\n.dsh-paper-wiki-example-explanation { margin: 12px 0 0; color: var(--wiki-ink); font-size: 13px; line-height: 1.8; white-space: pre-line; }\n.dsh-paper-wiki-table-scroll { max-width: 100%; overflow-x: auto; }\n.dsh-paper-wiki-content-table table { display: table; width: 100%; max-width: none; border-collapse: collapse; font-size: 13px; line-height: 1.65; }\n.dsh-paper-wiki-content-table caption { padding: 0 0 14px; color: var(--wiki-ink); font-size: 16px; font-weight: 650; line-height: 1.5; text-align: left; }\n.dsh-paper-wiki-content-table th { background: var(--wiki-canvas); color: var(--wiki-ink); font-size: 12px; font-weight: 650; text-align: left; vertical-align: top; }\n.dsh-paper-wiki-content-table th,\n.dsh-paper-wiki-content-table td { min-width: 85px; padding: 10px 12px; border: 1px solid var(--wiki-line); overflow-wrap: anywhere; }\n.dsh-paper-wiki-content-table td { color: var(--wiki-ink); vertical-align: top; }\n.dsh-paper-wiki-content-chart { margin-inline: 0; }\n.dsh-paper-wiki-chart-context { margin: 8px 0 0; color: var(--wiki-muted); font-size: 13px; line-height: 1.7; }\n.dsh-paper-wiki-chart-metric { margin: 9px 0 17px; color: var(--wiki-muted); font-size: 12px; line-height: 1.5; }\n.dsh-paper-wiki-chart-data { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; }\n.dsh-paper-wiki-chart-data li { min-width: 0; }\n.dsh-paper-wiki-chart-row-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 10px; margin-bottom: 6px; font-size: 13px; line-height: 1.65; }\n.dsh-paper-wiki-chart-row-heading > span:first-child { min-width: 0; overflow-wrap: anywhere; }\n.dsh-paper-wiki-chart-value { flex: none; max-width: 100%; font-family: var(--ds-font-family-code); font-variant-numeric: tabular-nums; color: var(--wiki-ink); overflow-wrap: anywhere; }\n.dsh-paper-wiki-chart-value .dsh-paper-wiki-content-references { margin-left: 5px; font-family: var(--dsw-font-family); font-size: 11px; }\n.dsh-paper-wiki-chart-track { position: relative; height: 12px; overflow: visible; border-radius: 3px; background: var(--wiki-canvas); }\n.dsh-paper-wiki-chart-fill { position: absolute; top: 0; bottom: 0; border-radius: 2px; background: var(--wiki-accent); }\n.dsh-paper-wiki-chart-fill[data-negative] { background: color-mix(in srgb, var(--wiki-accent) 55%, var(--wiki-muted)); }\n.dsh-paper-wiki-chart-zero { position: absolute; top: -2px; bottom: -2px; width: 1px; background: color-mix(in srgb, var(--wiki-ink) 48%, transparent); }\n.dsh-paper-wiki-chart-axis { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; color: var(--wiki-muted); font-family: var(--ds-font-family-code); font-size: 11px; line-height: 1.5; }\n.dsh-paper-wiki-chart-axis > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }\n.dsh-paper-wiki-chart-axis > span + span { text-align: right; }\n.dsh-paper-wiki-content-block :is(button,[tabindex]):focus-visible { outline: 2px solid var(--wiki-accent); outline-offset: 3px; }\n@container dsh-paper-wiki (max-width: 440px) {\n  .dsh-paper-wiki-content-block { padding: 14px; }\n  .dsh-paper-wiki-chart-row-heading { flex-wrap: wrap; gap: 2px 10px; }\n  .dsh-paper-wiki-content-table th, .dsh-paper-wiki-content-table td { padding: 8px; }\n}\n\n.dsh-paper-wiki-example-sequence, .dsh-paper-wiki-flow-sequence { margin: 0; padding: 0; list-style: none; }\n.dsh-paper-wiki-example-sequence { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }\n.dsh-paper-wiki-example-step { min-width: 0; }\n.dsh-paper-wiki-example-step:last-child:nth-child(odd) { grid-column: 1 / -1; }\n.dsh-paper-wiki-example-step h4, .dsh-paper-wiki-flow-step h4 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; font-size: 14px; font-weight: 650; line-height: 1.6; }\n.dsh-paper-wiki-sequence-number { flex: none; color: var(--wiki-accent-ink); font-family: var(--ds-font-family-code); font-size: 12px; }\n.dsh-paper-wiki-flow-sequence { display: grid; gap: 0; margin-top: 17px; }\n.dsh-paper-wiki-flow-step { position: relative; min-width: 0; padding: 0 0 22px 18px; border-left: 2px solid var(--wiki-accent-line); }\n.dsh-paper-wiki-flow-step:last-child { padding-bottom: 0; }\n.dsh-paper-wiki-flow-step::before { content: ''; position: absolute; left: -5px; top: 8px; width: 8px; height: 8px; border: 2px solid var(--wiki-paper); border-radius: 50%; background: var(--wiki-accent); }\n.dsh-paper-wiki-flow-step dl { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 6px 12px; margin: 0; font-size: 13px; line-height: 1.75; }\n.dsh-paper-wiki-flow-step dt { color: var(--wiki-muted); font-size: 12px; }\n.dsh-paper-wiki-flow-step dd { min-width: 0; margin: 0; white-space: pre-line; overflow-wrap: anywhere; }\n.dsh-paper-wiki-term-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 20px; margin: 17px 0 0; }\n.dsh-paper-wiki-term { min-width: 0; }\n.dsh-paper-wiki-term dt { margin: 0 0 7px; color: var(--wiki-accent-ink); font-size: 15px; font-weight: 650; line-height: 1.6; }\n.dsh-paper-wiki-term dd { margin: 0; font-size: 13px; line-height: 1.8; white-space: pre-line; }\n.dsh-paper-wiki-term .dsh-paper-wiki-term-example { display: grid; gap: 4px; margin: 10px 0; padding: 10px 12px; border-left: 2px solid var(--wiki-accent-line); border-radius: 0 6px 6px 0; background: var(--wiki-accent-fill); color: var(--wiki-ink); overflow-wrap: anywhere; }\n.dsh-paper-wiki-term-example > span, .dsh-paper-wiki-term-role > span { display: block; color: var(--wiki-muted); font-size: 11px; }\n.dsh-paper-wiki-term .dsh-paper-wiki-term-contrast { margin-top: 8px; color: var(--wiki-muted); font-size: 12px; }\n.dsh-paper-wiki-diagram-description, .dsh-paper-wiki-evidence-question { margin: 0 0 13px; color: var(--wiki-ink); font-size: 13px; line-height: 1.8; white-space: pre-line; }\n.dsh-paper-wiki-diagram-stages { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }\n.dsh-paper-wiki-diagram-stages button { min-width: 0; max-width: 100%; min-height: 34px; padding: 6px 11px; border: 1px solid var(--wiki-line); border-radius: 7px; background: var(--wiki-paper); color: var(--wiki-muted); font: inherit; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; cursor: pointer; }\n.dsh-paper-wiki-diagram-stages button[aria-pressed='true'] { border-color: var(--wiki-accent-line); background: var(--wiki-accent-fill); color: var(--wiki-accent-ink); font-weight: 650; }\n.dsh-paper-wiki-diagram-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--wiki-line); border-radius: 8px; background: var(--wiki-canvas); }\n.dsh-paper-wiki-diagram-canvas { position: relative; isolation: isolate; }\n.dsh-paper-wiki-diagram-wires { position: absolute; inset: 0; }\n.dsh-paper-wiki-diagram-column { position: absolute; top: 18px; color: var(--wiki-muted); font-size: 12px; font-weight: 600; text-align: center; line-height: 1.5; }\n.dsh-paper-wiki-diagram-edge { color: var(--wiki-muted); }\n.dsh-paper-wiki-diagram-edge[data-active] { color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-diagram-edge-label-bg { fill: var(--wiki-canvas); }\n.dsh-paper-wiki-diagram-edge text { fill: currentColor; stroke: var(--wiki-canvas); stroke-width: 2px; paint-order: stroke; stroke-linejoin: round; font-family: var(--ds-font-family-code), ui-monospace, monospace; font-size: 11px; }\n.dsh-paper-wiki-diagram-node { position: absolute; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; padding: 11px 13px; border: 1px solid var(--wiki-line); border-radius: 8px; background: var(--wiki-paper); color: var(--wiki-ink); font: inherit; font-size: 13px; line-height: 1.55; text-align: center; overflow-wrap: anywhere; cursor: pointer; }\n.dsh-paper-wiki-diagram-node[data-active] { border-color: var(--wiki-accent); background: color-mix(in srgb, var(--wiki-accent) 8%, var(--wiki-paper)); }\n.dsh-paper-wiki-diagram-node[aria-pressed='true'] { outline: 2px solid var(--wiki-accent); outline-offset: 2px; }\n.dsh-paper-wiki-diagram-detail, .dsh-paper-wiki-evidence-detail { margin-top: 13px; padding: 12px 14px; border-left: 2px solid var(--wiki-accent-line); border-radius: 0 6px 6px 0; background: var(--wiki-accent-fill); }\n.dsh-paper-wiki-diagram-detail h4, .dsh-paper-wiki-evidence-detail h4 { margin: 0 0 5px; font-size: 13px; font-weight: 650; }\n.dsh-paper-wiki-diagram-detail p, .dsh-paper-wiki-evidence-detail p { margin: 0; font-size: 13px; line-height: 1.8; white-space: pre-line; }\n.dsh-paper-wiki-diagram-relations { display: grid; gap: 5px; margin: 13px 0 0; padding: 0; list-style: none; font-size: 12px; line-height: 1.7; color: var(--wiki-muted); }\n.dsh-paper-wiki-diagram-relations [data-active] { color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-evidence-budget { margin: 0 0 14px; color: var(--wiki-muted); font-size: 12px; }\n.dsh-paper-wiki-evidence-states { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }\n.dsh-paper-wiki-evidence-state { min-width: 0; padding: 14px; border: 1px solid var(--wiki-line); border-radius: 8px; }\n.dsh-paper-wiki-evidence-state h4 { margin: 0 0 11px; color: var(--wiki-ink); font-size: 14px; font-weight: 650; line-height: 1.6; }\n.dsh-paper-wiki-evidence-slots { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }\n.dsh-paper-wiki-evidence-slots li { display: grid; grid-template-columns: 14px minmax(0, 1fr); align-items: center; gap: 7px; min-height: 40px; }\n.dsh-paper-wiki-evidence-position { color: var(--wiki-muted); font-family: var(--ds-font-family-code); font-size: 11px; }\n.dsh-paper-wiki-evidence-slots button { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; min-height: 40px; padding: 8px 10px; border: 1px solid var(--wiki-line); border-radius: 6px; background: var(--wiki-canvas); color: var(--wiki-ink); font: inherit; font-size: 12px; line-height: 1.6; text-align: left; overflow-wrap: anywhere; cursor: pointer; }\n.dsh-paper-wiki-evidence-slots button[aria-expanded='true'] { border-color: var(--wiki-accent); }\n.dsh-paper-wiki-evidence-slots [data-added] button { border-color: var(--wiki-accent-line); background: var(--wiki-accent-fill); }\n.dsh-paper-wiki-evidence-added { flex: none; color: var(--wiki-accent-ink); font-size: 11px; font-weight: 650; }\n.dsh-paper-wiki-evidence-empty { color: var(--wiki-muted); font-size: 12px; }\n.dsh-paper-wiki-evidence-removed { margin: 10px 0 0; color: var(--wiki-muted); font-size: 12px; line-height: 1.6; }\n.dsh-paper-wiki-evidence-coverage { margin: 13px 0 5px; color: var(--wiki-ink); font-size: 12px; font-weight: 650; }\n.dsh-paper-wiki-evidence-requirements { margin: 0; padding: 0; list-style: none; font-size: 11px; line-height: 1.8; color: var(--wiki-muted); }\n.dsh-paper-wiki-evidence-requirements [data-covered] { color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-evidence-explanation { margin: 11px 0 0; font-size: 12px; line-height: 1.8; white-space: pre-line; }\n.dsh-paper-wiki-calculation-formula { margin: 0 0 17px; padding: 12px 14px; border: 1px solid var(--wiki-line); border-radius: 7px; background: var(--wiki-canvas); color: var(--wiki-ink); font-family: var(--ds-font-family-code); font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }\n.dsh-paper-wiki-calculation-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; }\n.dsh-paper-wiki-calculation-input { min-width: 0; }\n.dsh-paper-wiki-calculation-input-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 12px; }\n.dsh-paper-wiki-calculation-input-heading label { color: var(--wiki-ink); font-weight: 650; }\n.dsh-paper-wiki-calculation-input-heading code { color: var(--wiki-muted); font-size: 11px; }\n.dsh-paper-wiki-calculation-input-heading output { margin-left: auto; font-family: var(--ds-font-family-code); font-variant-numeric: tabular-nums; color: var(--wiki-accent-ink); }\n.dsh-paper-wiki-calculation-input > p { margin: 5px 0 0; color: var(--wiki-muted); font-size: 12px; line-height: 1.7; white-space: pre-line; }\n.dsh-paper-wiki-calculation-controls { display: flex; align-items: center; gap: 11px; margin-top: 9px; }\n.dsh-paper-wiki-calculation-controls input[type='range'] { width: 100%; min-width: 0; accent-color: var(--wiki-accent); cursor: pointer; }\n.dsh-paper-wiki-calculation-controls input[type='number'] { width: 82px; min-width: 0; min-height: 32px; padding: 5px 7px; border: 1px solid var(--wiki-line); border-radius: 6px; background: var(--wiki-paper); color: var(--wiki-ink); font: inherit; font-family: var(--ds-font-family-code); font-size: 12px; }\n.dsh-paper-wiki-calculation-result { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin-top: 18px; padding: 13px 16px; border-radius: 8px; background: var(--wiki-accent-fill); }\n.dsh-paper-wiki-calculation-result > span { color: var(--wiki-muted); font-size: 12px; }\n.dsh-paper-wiki-calculation-result output { color: var(--wiki-accent-ink); font-family: var(--ds-font-family-code); font-size: 25px; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }\n.dsh-paper-wiki-calculation-result p { margin: 0; color: var(--wiki-muted); font-size: 12px; line-height: 1.7; }\n.dsh-paper-wiki-calculation-interpretation { margin: 12px 0 0; font-size: 13px; line-height: 1.8; white-space: pre-line; }\n.dsh-paper-wiki-calculation-reset { margin-top: 10px; padding: 5px 9px; border: 1px solid var(--wiki-line); border-radius: 6px; background: var(--wiki-paper); color: var(--wiki-muted); font: inherit; font-size: 12px; cursor: pointer; }\n@container dsh-paper-wiki (max-width: 440px) {\n  .dsh-paper-wiki-example-sequence { grid-template-columns: minmax(0, 1fr); }\n  .dsh-paper-wiki-evidence-state { padding: 11px; }\n}\n@media (pointer: coarse) {\n  .dsh-paper-wiki-diagram-stages button,\n  .dsh-paper-wiki-evidence-slots button { min-height: 44px; }\n}\n"
+const paperExportStyles = ":root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif; color: #292735; background: #f6f5f9; }\n* { box-sizing: border-box; }\nbody { margin: 0; line-height: 1.8; }\nbutton, input { font: inherit; }\nbutton { color: inherit; }\n.paper-export { max-width: 1016px; margin: 0 auto; padding: 48px clamp(18px, 5vw, 56px) 80px; }\n.pe-header { border-bottom: 1px solid #dedbe6; padding-bottom: 24px; }\n.pe-eyebrow { color: #7753a7; font-size: 13px; letter-spacing: .08em; }\nh1 { margin: 10px 0; font-size: clamp(26px, 4.5vw, 42px); line-height: 1.4; overflow-wrap: anywhere; }\n.pe-file-name { color: #746e7e; font-size: 13px; overflow-wrap: anywhere; }\n.pe-directory { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 24px 0; font-size: 14px; }\n.pe-directory a { color: #6e4c95; text-decoration-thickness: 1px; text-underline-offset: 4px; }\n.pe-chapter { min-width: 0; margin-top: 40px; scroll-margin-top: 20px; }\n.pe-chapter > h2 { display: flex; align-items: baseline; gap: 14px; margin-bottom: 24px; font-size: 25px; line-height: 1.5; }\n.pe-chapter > h2 > span { color: #a095b0; font-weight: 400; font-size: 18px; }\nh3, figcaption { margin: 0 0 14px; font-weight: 650; font-size: 20px; line-height: 1.5; }\nh4 { margin: 0 0 12px; font-size: 16px; line-height: 1.6; }\nh2, h3, h4, figcaption, dt, dd, .pe-directory a { overflow-wrap: anywhere; }\np { margin: 10px 0 16px; overflow-wrap: anywhere; }\n.pe-paragraph > p { white-space: pre-line; }\n.pe-block { margin: 28px 0; padding: clamp(18px, 3vw, 28px); border: 1px solid #e2dfeb; border-radius: 13px; background: #fff; min-width: 0; }\n.pe-references { margin: 12px 0 0; color: #85798f; font-size: 12px; }\n.pe-mode { display: inline-block; margin: 0 0 12px; padding: 2px 9px; border-radius: 5px; background: #f0eaf8; color: #70528f; font-size: 12px; }\npre { max-width: 100%; margin: 12px 0; padding: 16px; overflow-x: auto; border: 1px solid #e4e1ec; border-radius: 8px; background: #f7f6fa; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; font-size: 13px; }\ncode { font-family: \"SFMono-Regular\", Consolas, \"Liberation Mono\", monospace; }\np > code, li > code, td > code { padding: 1px 4px; background: #f1eef6; border-radius: 3px; }\ndl, dd { margin: 0; }\n.pe-terms dl > div { display: grid; grid-template-columns: minmax(90px, .9fr) minmax(0, 3fr); gap: 14px; padding: 18px 0; border-top: 1px solid #ebe8f0; }\n.pe-terms dt { color: #60447e; font-weight: 650; }\n.pe-terms dd p { margin: 0 0 8px; }\n.pe-terms dd strong { font-weight: 550; }\n.pe-steps { list-style: none; padding: 0; margin: 0; }\n.pe-steps > li { padding: 20px 0 20px 16px; border-left: 3px solid #e5dfed; }\n.pe-steps > li + li { margin-top: 8px; border-top: 1px solid #eeeaf4; }\n.pe-steps button, .pe-evidence-state h4 button { padding: 0; border: 0; background: transparent; text-align: left; font-weight: 650; cursor: pointer; }\n[data-selectable][data-active=\"true\"] { border-color: #9270b3; background: #fbf9fe; }\n.pe-flow dl { display: grid; grid-template-columns: 46px 1fr; gap: 8px 12px; }\n.pe-flow dt { color: #8b7e99; }\n.pe-flow dd { overflow-wrap: anywhere; }\n.pe-table-scroll { max-width: 100%; overflow-x: auto; }\ntable { width: 100%; border-collapse: collapse; font-size: 14px; }\ncaption { text-align: left; padding-bottom: 16px; font-size: 20px; font-weight: 650; }\nth, td { min-width: 92px; padding: 12px; text-align: left; vertical-align: top; border-bottom: 1px solid #e8e3ef; overflow-wrap: anywhere; }\nth { color: #69597a; background: #f6f2fa; font-weight: 600; }\n.pe-diagram-scroll { max-width: 100%; overflow-x: auto; border: 1px solid #e6e0ee; border-radius: 9px; background: #faf8fd; }\n.pe-diagram svg { display: block; width: 100%; min-width: 650px; }\n.pe-column-label { fill: #8d7e9a; font-size: 13px; font-weight: 600; text-anchor: middle; }\n.pe-edge path { stroke: #b7a9c6; stroke-width: 1.6; fill: none; }\n.pe-edge-label text { fill: #7d7089; font-size: 10px; text-anchor: middle; paint-order: stroke; stroke: #faf8fd; stroke-width: 2px; stroke-linejoin: round; }\n.pe-edge-label-box { fill: #faf8fd; stroke: #e5dcec; stroke-width: .7; }\n.pe-edge-label-leader { fill: none; stroke: #bfb0ce; stroke-width: 1; stroke-dasharray: 2 3; }\n.pe-edge-label[data-active=\"true\"] text { fill: #6b438e; font-weight: 600; }\n.pe-edge-label[data-active=\"true\"] .pe-edge-label-box { fill: #f2eafa; stroke: #b49bc8; }\n.pe-diagram marker path { fill: #957cae; }\n.pe-edge[data-active=\"true\"] path { stroke: #7851a1; stroke-width: 3; }\n.pe-node { cursor: pointer; outline: none; }\n.pe-node rect { fill: #fff; stroke: #cfc1dc; stroke-width: 1.4; }\n.pe-node text { fill: #4a3b59; font-size: 13px; text-anchor: middle; }\n.pe-node[data-active=\"true\"] rect { fill: #eae0f4; stroke: #9c7db7; }\n.pe-node[data-selected=\"true\"] rect, .pe-node:focus-visible rect { stroke: #67418c; stroke-width: 3; }\n.pe-diagram-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }\n.pe-diagram-controls button { border: 1px solid #e2daea; background: #fff; padding: 5px 11px; border-radius: 6px; font-size: 13px; cursor: pointer; }\n.pe-diagram-controls button[aria-pressed=\"true\"] { color: #67448d; border-color: #bba4d1; background: #f1eaf8; }\n.pe-diagram-explanations { padding-left: 24px; }\n.pe-diagram-explanations li { padding: 8px 10px; border-radius: 6px; }\n.pe-diagram-explanations li[data-active=\"true\"] { background: #f5eefb; }\n.pe-diagram-explanations p { margin: 4px 0; }\n.pe-node-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }\n.pe-node-details > div { padding: 12px; border: 1px solid #e7e0ed; border-radius: 7px; }\n.pe-node-details > div[data-selected=\"true\"] { border-color: #9d7ab9; background: #f5eefb; }\n.pe-node-details dt { font-weight: 600; color: #675076; }\n.pe-node-details dd { margin-top: 4px; font-size: 14px; overflow-wrap: anywhere; }\n.pe-edge-details { font-size: 13px; color: #7c6b8a; padding-left: 20px; }\n.pe-evidence-states { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }\n.pe-evidence-state { padding: 16px; border: 1px solid #e3dce9; border-radius: 9px; min-width: 0; }\n.pe-evidence-count { font-size: 13px; color: #786982; }\n.pe-evidence-slots { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0; }\n.pe-evidence-slot { padding: 10px; border: 1px solid #e5dfeb; border-radius: 7px; background: #f8f6fb; min-width: 0; font-size: 13px; overflow-wrap: anywhere; }\n.pe-evidence-slot p { margin: 6px 0; font-size: 12px; }\n.pe-evidence-slot small { display: block; color: #87798f; }\n.pe-evidence-slot[data-added=\"true\"] { background: #ecf7f1; border-color: #a6c8b6; }\n.pe-evidence-slot[data-added=\"true\"] > small { color: #3c8061; }\n.pe-slot-empty { color: #a096ab; border-style: dashed; }\n.pe-removed { color: #a36268; font-size: 13px; }\n.pe-coverage { list-style: none; padding: 0; font-size: 12px; }\n.pe-coverage [data-covered=\"true\"] { color: #3e7b60; }\n.pe-coverage [data-covered=\"false\"] { color: #a26766; }\n.pe-candidate-details { margin-top: 20px; color: #786b82; font-size: 13px; }\n.pe-candidate-details dl > div { padding: 8px 0; border-bottom: 1px solid #eee9f3; }\n.pe-candidate-details dt { font-weight: 600; }\n.pe-formula { padding: 12px 14px; background: #f5f1f9; border-radius: 7px; white-space: pre-wrap; }\n.pe-calculation-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }\n.pe-calculation-input { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: baseline; min-width: 0; }\n.pe-calculation-input label { font-weight: 600; }\n.pe-calculation-input p { grid-column: 1 / -1; margin: 0; font-size: 13px; color: #897a95; }\n.pe-calculation-input input { grid-column: 1 / -1; width: 100%; accent-color: #8861aa; }\n.pe-fixed-value { color: #a092ac; font-size: 12px; }\n.pe-calculation-result { display: flex; flex-wrap: wrap; align-items: baseline; gap: 16px; padding-top: 22px; border-top: 1px solid #eee7f4; }\n.pe-calculation-result > output { font-size: 32px; color: #78539c; font-weight: 650; font-variant-numeric: tabular-nums; }\n.pe-calculation-result > output[data-state=\"error\"] { color: #a46869; font-size: 16px; }\n.pe-chart ol { list-style: none; padding: 0; }\n.pe-chart li { padding: 9px 0; }\n.pe-chart-label { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; font-size: 14px; }\n.pe-chart-label strong { font-variant-numeric: tabular-nums; }\n.pe-chart-track { position: relative; height: 15px; margin-top: 8px; background: #f2edf7; border-radius: 4px; overflow: hidden; }\n.pe-chart-bar { position: absolute; top: 0; bottom: 0; background: #a082be; }\n.pe-chart-bar[data-negative=\"true\"] { background: #c79aa6; }\n.pe-chart-zero { position: absolute; top: 0; bottom: 0; border-left: 1px solid #6f5b80; }\n.pe-chart-axis { display: flex; justify-content: space-between; font-size: 12px; color: #8e7f9c; }\nbutton:focus-visible, a:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid #8861aa; outline-offset: 4px; }\n@media (max-width: 560px) { .paper-export { padding-top: 28px; } .pe-terms dl > div, .pe-node-details, .pe-calculation-inputs { grid-template-columns: 1fr; } .pe-chapter > h2 { font-size: 22px; } .pe-block { margin: 20px 0; } }\n@media print { :root { background: #fff; } .paper-export { max-width: none; padding: 0; } .pe-directory { font-size: 11px; } .pe-chapter { break-before: auto; } h2, h3, h4, figcaption { break-after: avoid; } .pe-block, .pe-steps > li { box-shadow: none; } .pe-steps > li, .pe-evidence-state { break-inside: avoid; } .pe-diagram svg { min-width: 0; } .pe-diagram-scroll, .pe-table-scroll { overflow: visible; } .pe-calculation-input input { display: none; } button { border: 0; } }\n"
+const paperExportBehavior = "(() => {\n  const documentRoot = document\n  let calculationRows = []\n  try { calculationRows = JSON.parse(documentRoot.getElementById('paper-export-calculations')?.textContent || '[]') }\n  catch { calculationRows = [] }\n  const calculations = new Map(Array.isArray(calculationRows) ? calculationRows.map(row => [row.id, row.block]) : [])\n  const all = (root, selector) => Array.from(root.querySelectorAll(selector))\n  const strings = value => {\n    try { const parsed = JSON.parse(value || '[]'); return Array.isArray(parsed) ? parsed.filter(item => typeof item === 'string') : [] }\n    catch { return [] }\n  }\n  function selectCard(button) {\n    const group = button.closest('[data-export-selection]')\n    if (!group) return\n    for (const card of all(group, '[data-selectable]')) card.dataset.active = String(card.id === button.dataset.targetId)\n    for (const control of all(group, 'button[data-export-action]')) control.setAttribute('aria-pressed', String(control === button))\n  }\n  function selectDiagramStep(button) {\n    const group = button.closest('[data-diagram]')\n    if (!group) return\n    const nodes = new Set(strings(button.dataset.activeNodes)), edges = new Set(strings(button.dataset.activeEdges))\n    for (const node of all(group, '[data-node-id]')) node.dataset.active = String(nodes.has(node.dataset.nodeId))\n    for (const edge of all(group, '[data-edge-id]')) edge.dataset.active = String(edges.has(edge.dataset.edgeId))\n    for (const label of all(group, '[data-edge-label-id]')) label.dataset.active = String(edges.has(label.dataset.edgeLabelId))\n    for (const control of all(group, 'button[data-export-action]')) control.setAttribute('aria-pressed', String(control === button))\n    for (const item of all(group, '[data-diagram-explanation]')) item.dataset.active = String(item.dataset.diagramExplanation === button.dataset.stepIndex)\n  }\n  function selectDiagramNode(node) {\n    const group = node.closest('[data-diagram]')\n    if (!group) return\n    for (const other of all(group, '[data-node-id]')) {\n      other.dataset.selected = String(other === node)\n      other.setAttribute('aria-pressed', String(other === node))\n    }\n    for (const detail of all(group, '[data-node-detail]')) detail.dataset.selected = String(detail.dataset.nodeDetail === node.dataset.nodeId)\n  }\n  function activate(target) {\n    if (target.dataset.exportAction === 'select-card') selectCard(target)\n    else if (target.dataset.exportAction === 'diagram-step') selectDiagramStep(target)\n    else if (target.dataset.exportAction === 'diagram-node') selectDiagramNode(target)\n  }\n  documentRoot.addEventListener('click', event => {\n    const target = event.target?.closest?.('[data-export-action]')\n    if (target) activate(target)\n  })\n  documentRoot.addEventListener('keydown', event => {\n    const target = event.target?.closest?.('[data-export-action]')\n    if (!target) return\n    if (target.dataset.exportAction === 'diagram-node' && ['Enter', ' '].includes(event.key)) {\n      event.preventDefault(); selectDiagramNode(target); return\n    }\n    const group = target.closest('[data-export-controls]')\n    if (!group) return\n    const controls = all(group, 'button[data-export-action]'), index = controls.indexOf(target)\n    if (index < 0) return\n    const next = { ArrowRight: (index + 1) % controls.length, ArrowDown: (index + 1) % controls.length,\n      ArrowLeft: (index + controls.length - 1) % controls.length, ArrowUp: (index + controls.length - 1) % controls.length,\n      Home: 0, End: controls.length - 1 }[event.key]\n    if (next === undefined) return\n    event.preventDefault(); activate(controls[next]); controls[next].focus()\n  })\n  documentRoot.addEventListener('input', event => {\n    const input = event.target\n    if (!input?.matches?.('input[data-calc-input]')) return\n    const group = input.closest('[data-calculation]'), block = calculations.get(group?.id)\n    if (!group || !block || block.mode !== 'illustrative') return\n    const result = group.querySelector('[data-calculation-result]'), overrides = Object.create(null)\n    for (const slider of all(group, 'input[data-calc-input]')) {\n      const value = Number(slider.value)\n      overrides[slider.dataset.calcInput] = value\n      for (const output of all(group, '[data-calc-input-value]')) if (output.dataset.calcInputValue === slider.dataset.calcInput) output.textContent = String(value)\n    }\n    try {\n      const value = evaluatePaperCalculation(block, overrides)\n      result.textContent = value.toFixed(block.precision); result.dataset.rawValue = String(value); result.dataset.state = 'ready'\n    } catch {\n      result.textContent = '当前参数无法计算。'; result.dataset.rawValue = ''; result.dataset.state = 'error'\n    }\n  })\n})()\n"
+/** Shared trusted arithmetic for the reader and standalone HTML exports. No string evaluation. */
+function evaluatePaperCalculation(block, overrides = {}) {
+  const record = value => value !== null && typeof value === 'object' && !Array.isArray(value)
+  const own = (value, key) => Object.prototype.hasOwnProperty.call(value, key)
+  const fail = message => { throw new Error(message) }
+  const finite = (value, label, bounded = false) => {
+    if (typeof value !== 'number' || !Number.isFinite(value) || bounded && Math.abs(value) > 1e6) fail(label + '必须是有效范围内的有限数值。')
+    return value
+  }
+  if (!record(block) || block.type !== 'calculation' || !['paper', 'illustrative'].includes(block.mode)) fail('计算示例格式或来源类型无效。')
+  if (!Number.isInteger(block.precision) || block.precision < 0 || block.precision > 6) fail('计算结果精度必须为 0 至 6。')
+  if (!Array.isArray(block.inputs) || block.inputs.length < 2 || block.inputs.length > 10) fail('计算示例需要 2 至 10 个参数。')
+  if (!record(overrides)) fail('计算参数修改格式无效。')
+  const inputs = new Map()
+  for (const input of block.inputs) {
+    if (!record(input) || typeof input.id !== 'string' || !/^[A-Za-z0-9_-]{1,40}$/.test(input.id) || inputs.has(input.id)) fail('计算参数编号无效或重复。')
+    finite(input.value, '参数初始值', true)
+    const rangeKeys = ['min', 'max', 'step'].filter(key => own(input, key))
+    if (rangeKeys.length && (block.mode !== 'illustrative' || rangeKeys.length !== 3)) fail('仅构造示例可设置完整的 min、max、step 参数范围。')
+    if (rangeKeys.length) {
+      finite(input.min, '参数最小值', true)
+      finite(input.max, '参数最大值', true)
+      finite(input.step, '参数步长', true)
+      if (input.min >= input.max || input.step <= 0 || input.step > input.max - input.min
+        || input.value < input.min || input.value > input.max) fail('参数范围、步长或初始值无效。')
+    }
+    inputs.set(input.id, input)
+  }
+  for (const id of Object.keys(overrides)) {
+    const input = inputs.get(id)
+    if (!input) fail('修改包含未知计算参数。')
+    if (block.mode !== 'illustrative' || !own(input, 'min')) fail('此参数为固定值，不能修改。')
+    finite(overrides[id], '修改后的参数值', true)
+    if (overrides[id] < input.min || overrides[id] > input.max) fail('修改后的参数值超出允许范围。')
+  }
+  let nodes = 0
+  function calculate(node, depth) {
+    if (++nodes > 64) fail('计算表达式超过 64 个节点。')
+    if (depth > 6) fail('计算表达式超过 6 层。')
+    if (!record(node)) fail('计算表达式节点格式无效。')
+    const keys = Object.keys(node)
+    if (own(node, 'input')) {
+      if (keys.length !== 1 || typeof node.input !== 'string' || !inputs.has(node.input)) fail('表达式包含未知或不明确的参数引用。')
+      return own(overrides, node.input) ? overrides[node.input] : inputs.get(node.input).value
+    }
+    if (own(node, 'number')) {
+      if (keys.length !== 1) fail('计算常量节点格式无效。')
+      return finite(node.number, '计算常量')
+    }
+    if (keys.length !== 2 || !own(node, 'op') || !own(node, 'args') || !['add', 'subtract', 'multiply', 'divide'].includes(node.op)) fail('计算只支持加、减、乘、除运算。')
+    const binary = node.op === 'subtract' || node.op === 'divide'
+    if (!Array.isArray(node.args) || node.args.length < 2 || node.args.length > (binary ? 2 : 8)) fail('计算运算的参数数量无效。')
+    const values = []
+    for (const argument of node.args) values.push(calculate(argument, depth + 1))
+    let result
+    if (node.op === 'add') result = values.reduce((sum, value) => sum + value, 0)
+    else if (node.op === 'subtract') result = values[0] - values[1]
+    else if (node.op === 'multiply') result = values.reduce((product, value) => product * value, 1)
+    else {
+      if (values[1] === 0) fail('分母不能为零。')
+      result = values[0] / values[1]
+    }
+    return finite(result, '计算结果')
+  }
+  return calculate(block.expression, 1)
+}
+
 function createPaperGenerationProgress(React, primitives) {
   const { createElement: h, useEffect, useId, useState } = React
   const { Button, IconCheckOutlineRegular } = primitives
@@ -73,6 +142,7 @@ function createPaperGenerationProgress(React, primitives) {
   }
 }
 
+
 function createPaperContentRenderer(React, primitives) {
   const { createElement: h, useId, useState } = React
   const { MarkdownText } = primitives
@@ -83,68 +153,265 @@ function createPaperContentRenderer(React, primitives) {
       '（第 ' + pages.join('、') + ' 页）') : null
   }
 
-  function moveTab(event, index, count, select) {
-    const next = { ArrowRight: (index + 1) % count, ArrowDown: (index + 1) % count,
-      ArrowLeft: (index + count - 1) % count, ArrowUp: (index + count - 1) % count,
-      Home: 0, End: count - 1 }[event.key]
-    if (next === undefined) return
-    event.preventDefault()
-    select(next)
-    event.currentTarget.parentElement?.querySelectorAll('[role="tab"]')[next]?.focus()
+  function compactJsonWhitespace(value) {
+    let result = '', quoted = false, escaped = false
+    for (const character of value) {
+      if (quoted) {
+        result += character
+        if (escaped) escaped = false
+        else if (character === '\\') escaped = true
+        else if (character === '"') quoted = false
+      } else if (character === '"') {
+        quoted = true
+        result += character
+      } else if (![' ', '\t', '\r', '\n'].includes(character)) result += character
+    }
+    return result
   }
 
   function fencedCode(code, language) {
+    if (language === 'json') {
+      try {
+        const parsed = JSON.parse(code)
+        if (compactJsonWhitespace(code) === compactJsonWhitespace(JSON.stringify(parsed))) code = JSON.stringify(parsed, null, 2)
+      } catch { /* Preserve readable legacy examples. */ }
+    }
     const runs = String(code).match(/`+/g) || []
     const fence = '`'.repeat(Math.max(3, ...runs.map(run => run.length + 1)))
     const tag = ['json', 'python', 'text'].includes(language) ? language : 'text'
     return fence + tag + '\n' + code + '\n' + fence
   }
 
+  function ModeLabel({ mode, calculation = false }) {
+    return h('span', { className: 'dsh-paper-wiki-example-mode' }, calculation
+      ? mode === 'illustrative' ? '构造计算（非实测）' : '基于论文数值'
+      : mode === 'illustrative' ? '构造示例' : '论文实例')
+  }
+
   function ExampleBlock({ block, labels }) {
-    const [selected, select] = useState(0)
     const prefix = useId()
-    const index = Math.min(selected, block.steps.length - 1)
-    const step = block.steps[index]
-    const panelId = prefix + '-panel'
     return h('section', { className: 'dsh-paper-wiki-content-block dsh-paper-wiki-example', 'aria-labelledby': prefix + '-title' },
-      h('div', { className: 'dsh-paper-wiki-content-heading' },
-        h('h3', { id: prefix + '-title' }, block.title),
-        h('span', { className: 'dsh-paper-wiki-example-mode' }, block.mode === 'illustrative' ? '构造示例' : '论文实例')),
-      h('div', { className: 'dsh-paper-wiki-content-tabs', role: 'tablist', 'aria-label': block.title + '：示例步骤' },
-        block.steps.map((item, i) => h('button', { type: 'button', role: 'tab', key: i,
-          id: prefix + '-tab-' + i, 'aria-selected': i === index, 'aria-controls': panelId,
-          tabIndex: i === index ? 0 : -1, onClick: () => select(i), onKeyDown: event => moveTab(event, i, block.steps.length, select) }, item.label))),
-      h('div', { className: 'dsh-paper-wiki-example-panel', id: panelId, role: 'tabpanel',
-        'aria-labelledby': prefix + '-tab-' + index },
-        h('div', { className: 'dsh-paper-wiki-example-code', role: 'region', tabIndex: 0, 'aria-label': step.label + '：代码' },
-          h(MarkdownText, { text: fencedCode(step.code, step.language), labels, omitHtml: true })),
-        h('p', { className: 'dsh-paper-wiki-example-explanation' }, step.explanation)),
+      h('div', { className: 'dsh-paper-wiki-content-heading' }, h('h3', { id: prefix + '-title' }, block.title), h(ModeLabel, { mode: block.mode })),
+      h('ol', { className: 'dsh-paper-wiki-example-sequence', 'aria-label': block.title + '：完整示例' }, block.steps.map((step, index) =>
+        h('li', { key: index, className: 'dsh-paper-wiki-example-step' }, h('h4', null,
+          h('span', { className: 'dsh-paper-wiki-sequence-number' }, String(index + 1)), step.label),
+          h('div', { className: 'dsh-paper-wiki-example-code', role: 'region', tabIndex: 0, 'aria-label': step.label + '：代码' },
+            h(MarkdownText, { text: fencedCode(step.code, step.language), labels, omitHtml: true })),
+          h('p', { className: 'dsh-paper-wiki-example-explanation' }, step.explanation)))),
       h(References, { references: block.references }))
   }
 
   function FlowBlock({ block }) {
-    const [selected, select] = useState(0)
     const prefix = useId()
-    const index = Math.min(selected, block.steps.length - 1)
-    const step = block.steps[index]
-    const panelId = prefix + '-panel'
     return h('section', { className: 'dsh-paper-wiki-content-block dsh-paper-wiki-method-flow', 'aria-labelledby': prefix + '-title' },
       h('h3', { id: prefix + '-title', className: 'dsh-paper-wiki-content-title' }, block.title),
-      h('div', { className: 'dsh-paper-wiki-flow-steps', role: 'tablist', 'aria-label': block.title + '：方法步骤' },
-        block.steps.flatMap((item, i) => [
-          i > 0 && h('span', { key: 'arrow-' + i, className: 'dsh-paper-wiki-flow-arrow', 'aria-hidden': true }, '→'),
-          h('button', { type: 'button', role: 'tab', key: 'step-' + i,
-            id: prefix + '-tab-' + i, 'aria-label': '第 ' + (i + 1) + ' 步：' + item.title,
-            'aria-selected': i === index, 'aria-controls': panelId, tabIndex: i === index ? 0 : -1,
-            onClick: () => select(i), onKeyDown: event => moveTab(event, i, block.steps.length, select) },
-          h('span', { className: 'dsh-paper-wiki-flow-number', 'aria-hidden': true }, String(i + 1)),
-          h('span', null, item.title)),
-        ])),
-      h('div', { className: 'dsh-paper-wiki-flow-panel', id: panelId, role: 'tabpanel',
-        'aria-labelledby': prefix + '-tab-' + index, tabIndex: 0 },
-        h('dl', null, [['输入', step.input], ['处理', step.operation], ['输出', step.output]].flatMap(([label, text]) => [
-          h('dt', { key: label + '-label' }, label), h('dd', { key: label + '-text' }, text),
-        ]))),
+      h('ol', { className: 'dsh-paper-wiki-flow-sequence', 'aria-label': block.title + '：全部方法步骤' }, block.steps.map((step, index) =>
+        h('li', { key: index, className: 'dsh-paper-wiki-flow-step' }, h('h4', null,
+          h('span', { className: 'dsh-paper-wiki-sequence-number' }, String(index + 1)), step.title),
+          h('dl', null, [['输入', step.input], ['处理', step.operation], ['输出', step.output]].flatMap(([label, text]) => [
+            h('dt', { key: label + '-label' }, label), h('dd', { key: label + '-text' }, text),
+          ]))))),
+      h(References, { references: block.references }))
+  }
+
+  function TermsBlock({ block }) {
+    const prefix = useId()
+    return h('section', { className: 'dsh-paper-wiki-content-block dsh-paper-wiki-terms', 'aria-labelledby': prefix + '-title' },
+      h('h3', { className: 'dsh-paper-wiki-content-title', id: prefix + '-title' }, block.title),
+      h('dl', { className: 'dsh-paper-wiki-term-list' }, block.items.map((item, index) => h('div', { key: index, className: 'dsh-paper-wiki-term' },
+        h('dt', null, item.term), h('dd', { className: 'dsh-paper-wiki-term-meaning' }, item.meaning),
+        h('dd', { className: 'dsh-paper-wiki-term-example' }, h('span', null, '具体例子'), item.example),
+        h('dd', { className: 'dsh-paper-wiki-term-role' }, h('span', null, '在这里的作用'), item.role),
+        item.contrast && h('dd', { className: 'dsh-paper-wiki-term-contrast' }, item.contrast)))),
+      h(References, { references: block.references }))
+  }
+
+  function DiagramBlock({ block }) {
+    const [selectedStep, selectStep] = useState(0), [selectedNode, selectNode] = useState(null)
+    const prefix = useId().replace(/[^a-zA-Z0-9_-]/g, '-')
+    const stepIndex = Math.min(selectedStep, block.steps.length - 1), step = block.steps[stepIndex]
+    const activeNodes = new Set(step.activeNodes), activeEdges = new Set(step.activeEdges)
+    const nodeWidth = 190, nodeHeight = 74, stride = 280
+    const positions = new Map(), rowCounts = []
+    block.columns.forEach((column, columnIndex) => {
+      const nodes = block.nodes.filter(node => node.column === column.id)
+      rowCounts.push(nodes.length)
+      nodes.forEach((node, row) => positions.set(node.id, { ...node, x: 24 + columnIndex * stride, y: 62 + row * 122, columnIndex }))
+    })
+    const width = Math.max(400, block.columns.length * stride + 36), height = Math.max(212, Math.max(...rowCounts) * 122 + 74)
+    const detail = positions.get(selectedNode)
+    const markerId = prefix + '-arrow', activeMarkerId = prefix + '-arrow-active'
+    const labelBoxes = []
+    function shortLabel(value, boxWidth) {
+      const characters = Array.from(value.replace(/\s+/g, ' ').trim())
+      const maximum = Math.max(4, Math.min(12, Math.floor((boxWidth - 10) / 6.6)))
+      const units = character => /^[\x20-\x7e]$/.test(character) ? 1 : 2
+      const lines = []
+      let position = 0
+      for (let line = 0; line < 2 && position < characters.length; line++) {
+        while (characters[position] === ' ') position++
+        const text = []
+        let size = 0
+        while (position < characters.length && size + units(characters[position]) <= maximum) {
+          size += units(characters[position]); text.push(characters[position++])
+        }
+        if (line === 1 && position < characters.length) {
+          while (text.length && size + 2 > maximum) size -= units(text.pop())
+          text.push('…')
+        }
+        lines.push(text.join('').trim())
+      }
+      return lines.length ? lines : ['']
+    }
+    function labelFor(edge, index) {
+      const from = positions.get(edge.from), to = positions.get(edge.to)
+      const sameColumn = from.columnIndex === to.columnIndex
+      const direction = from.columnIndex < to.columnIndex ? 1 : -1
+      const gap = stride - nodeWidth
+      const gapLeft = sameColumn || direction > 0 ? from.x + nodeWidth : from.x - gap
+      const boxWidth = Math.min(76, gap - 12), lines = shortLabel(edge.label, boxWidth)
+      const boxHeight = lines.length * 14 + 8
+      const middleY = (from.y + to.y + nodeHeight) / 2
+      const preferred = middleY - (sameColumn ? 0 : direction * (boxHeight / 2 + 12 + index % 2 * 4))
+      const x = gapLeft + (gap - boxWidth) / 2
+      const candidates = [0, 1, -1, 2, -2, 3, -3].map(offset =>
+        Math.max(8, Math.min(height - boxHeight - 8, preferred - boxHeight / 2 + offset * (boxHeight + 7))))
+      const overlaps = (y, box) => x < box.x + box.width + 4 && x + boxWidth + 4 > box.x
+        && y < box.y + box.height + 4 && y + boxHeight + 4 > box.y
+      const y = candidates.find(candidate => labelBoxes.every(box => !overlaps(candidate, box))) ?? candidates[0]
+      const box = { x, y, width: boxWidth, height: boxHeight, lines }
+      labelBoxes.push(box)
+      return box
+    }
+    function pathFor(edge, index) {
+      const from = positions.get(edge.from), to = positions.get(edge.to)
+      const sy = from.y + nodeHeight / 2, ey = to.y + nodeHeight / 2
+      if (from.columnIndex === to.columnIndex) {
+        const sx = from.x + nodeWidth, ex = to.x + nodeWidth, outside = sx + 34 + index % 3 * 13
+        return { d: `M${sx},${sy} C${outside},${sy} ${outside},${ey} ${ex},${ey}`, x: outside - 2, y: (sy + ey) / 2 - 5, anchor: 'end' }
+      }
+      const direction = from.x < to.x ? 1 : -1
+      const sx = from.x + (direction > 0 ? nodeWidth : 0), ex = to.x + (direction > 0 ? 0 : nodeWidth)
+      const bend = direction * (18 + index % 3 * 12)
+      const middle = (sx + ex) / 2
+      return { d: `M${sx},${sy} C${middle},${sy - bend} ${middle},${ey - bend} ${ex},${ey}`,
+        x: middle, y: (sy + ey) / 2 - bend * .75 - 7, anchor: 'middle' }
+    }
+    const edgeViews = block.edges.map((edge, index) => ({ edge, path: pathFor(edge, index),
+      label: labelFor(edge, index), active: activeEdges.has(edge.id) }))
+    return h('section', { className: 'dsh-paper-wiki-content-block dsh-paper-wiki-diagram', 'aria-labelledby': prefix + '-title' },
+      h('div', { className: 'dsh-paper-wiki-content-heading' }, h('h3', { id: prefix + '-title' }, block.title), h(ModeLabel, { mode: block.mode })),
+      h('p', { className: 'dsh-paper-wiki-diagram-description' }, block.description),
+      h('div', { className: 'dsh-paper-wiki-diagram-stages', role: 'group', 'aria-label': block.title + '：图解步骤' },
+        block.steps.map((item, index) => h('button', { type: 'button', key: index, 'aria-pressed': index === stepIndex,
+          onClick: () => { selectStep(index); selectNode(null) } }, item.label))),
+      h('div', { className: 'dsh-paper-wiki-diagram-scroll', role: 'region', tabIndex: 0, 'aria-label': block.title + '：关系图' },
+        h('div', { className: 'dsh-paper-wiki-diagram-canvas', style: { width, height } },
+          h('svg', { width, height, viewBox: `0 0 ${width} ${height}`, className: 'dsh-paper-wiki-diagram-wires', 'aria-hidden': true },
+            h('defs', null, [[markerId, 'var(--wiki-muted)'], [activeMarkerId, 'var(--wiki-accent-ink)']].map(([id, color]) =>
+              h('marker', { key: id, id, markerWidth: 7, markerHeight: 7, refX: 6, refY: 3.5, orient: 'auto', viewBox: '0 0 7 7' },
+                h('path', { d: 'M0 0L7 3.5L0 7Z', fill: color })))),
+            edgeViews.map(({ edge, path, active }) => h('g', { key: edge.id, className: 'dsh-paper-wiki-diagram-edge', 'data-active': active || undefined },
+                h('title', null, edge.label),
+                h('path', { d: path.d, fill: 'none', stroke: 'currentColor', strokeWidth: active ? 2.5 : 1.5,
+                  markerEnd: `url(#${active ? activeMarkerId : markerId})` }))),
+            edgeViews.map(({ edge, label, active }) => h('g', { key: edge.id + '-label',
+                className: 'dsh-paper-wiki-diagram-edge dsh-paper-wiki-diagram-label-group', 'data-active': active || undefined },
+                h('title', null, edge.label),
+                h('rect', { className: 'dsh-paper-wiki-diagram-edge-label-bg', x: label.x, y: label.y,
+                  width: label.width, height: label.height, rx: 4 }),
+                h('text', { className: 'dsh-paper-wiki-diagram-edge-label', textAnchor: 'middle' }, label.lines.map((line, lineIndex) =>
+                  h('tspan', { key: lineIndex, x: label.x + label.width / 2, y: label.y + 14 + lineIndex * 14 }, line)))))),
+          block.columns.map((column, index) => h('div', { key: column.id, className: 'dsh-paper-wiki-diagram-column', style: { left: 24 + index * stride, width: nodeWidth } }, column.label)),
+          [...positions.values()].map(node => h('button', { type: 'button', key: node.id, className: 'dsh-paper-wiki-diagram-node',
+            style: { left: node.x, top: node.y, width: nodeWidth, height: nodeHeight },
+            'data-active': activeNodes.has(node.id) || undefined, 'aria-pressed': selectedNode === node.id,
+            'aria-controls': prefix + '-detail', onClick: () => selectNode(node.id), title: node.label }, node.label)))),
+      h('div', { className: 'dsh-paper-wiki-diagram-detail', id: prefix + '-detail', 'aria-live': 'polite' },
+        detail && h('h4', null, detail.label), h('p', null, detail ? detail.detail : step.explanation)),
+      h('ul', { className: 'dsh-paper-wiki-diagram-relations', 'aria-label': '图中关系' }, block.edges.map(edge =>
+        h('li', { key: edge.id, 'data-active': activeEdges.has(edge.id) || undefined },
+          positions.get(edge.from).label, ' → ', positions.get(edge.to).label, '：', edge.label))),
+      h(References, { references: block.references }))
+  }
+
+  function EvidenceBlock({ block }) {
+    const [selection, select] = useState(null)
+    const prefix = useId(), items = new Map(block.items.map(item => [item.id, item]))
+    const selected = selection && items.get(selection.id)
+    return h('section', { className: 'dsh-paper-wiki-content-block dsh-paper-wiki-evidence', 'aria-labelledby': prefix + '-title' },
+      h('div', { className: 'dsh-paper-wiki-content-heading' }, h('h3', { id: prefix + '-title' }, block.title), h(ModeLabel, { mode: block.mode })),
+      h('p', { className: 'dsh-paper-wiki-evidence-question' }, block.question),
+      h('p', { className: 'dsh-paper-wiki-evidence-budget' }, '阅读预算：' + block.budget + ' 段'),
+      h('div', { className: 'dsh-paper-wiki-evidence-states' }, block.states.map((state, index) => {
+        const previous = index > 0 ? block.states[index - 1].ids : [], current = new Set(state.ids)
+        const added = new Set(index > 0 ? state.ids.filter(id => !previous.includes(id)) : [])
+        const removed = previous.filter(id => !current.has(id))
+        const covered = new Set(state.ids.flatMap(id => items.get(id).supports))
+        return h('section', { className: 'dsh-paper-wiki-evidence-state', key: index, 'aria-labelledby': prefix + '-state-' + index },
+          h('h4', { id: prefix + '-state-' + index }, state.label),
+          h('ol', { className: 'dsh-paper-wiki-evidence-slots', 'aria-label': state.label + '：阅读段落' },
+            Array.from({ length: block.budget }, (_, slot) => {
+              const id = state.ids[slot], item = items.get(id), active = selection?.state === index && selection.id === id
+              return h('li', { key: slot, 'data-added': added.has(id) || undefined }, h('span', { className: 'dsh-paper-wiki-evidence-position' }, String(slot + 1)),
+                item ? h('button', { type: 'button', 'aria-expanded': active, 'aria-controls': prefix + '-item-detail',
+                  onClick: () => select(active ? null : { state: index, id }) }, h('span', null, item.label),
+                  added.has(id) && h('span', { className: 'dsh-paper-wiki-evidence-added' }, '新增'))
+                  : h('span', { className: 'dsh-paper-wiki-evidence-empty' }, '空位'))
+            })),
+          removed.length > 0 && h('p', { className: 'dsh-paper-wiki-evidence-removed' }, '移除：' + removed.map(id => items.get(id).label).join('、')),
+          h('p', { className: 'dsh-paper-wiki-evidence-coverage' }, '已提供关系：' + block.required.filter(need => covered.has(need)).length + ' / ' + block.required.length),
+          h('ul', { className: 'dsh-paper-wiki-evidence-requirements' }, block.required.map(need =>
+            h('li', { key: need, 'data-covered': covered.has(need) || undefined }, covered.has(need) ? '已具备：' : '尚缺：', need))),
+          h('p', { className: 'dsh-paper-wiki-evidence-explanation' }, state.explanation))
+      })),
+      h('div', { className: 'dsh-paper-wiki-evidence-detail', id: prefix + '-item-detail', 'aria-live': 'polite', hidden: !selected },
+        selected && h('h4', null, selected.label), selected && h('p', null, selected.detail)),
+      h(References, { references: block.references }))
+  }
+
+  function CalculationBlock({ block }) {
+    const [overrides, change] = useState({})
+    const prefix = useId(), illustrative = block.mode === 'illustrative'
+    let result, error = '', changed = false
+    const numbers = Object.create(null)
+    for (const input of block.inputs) if (Object.hasOwn(overrides, input.id)) {
+      const raw = overrides[input.id], value = typeof raw === 'string' && !raw.trim() ? NaN : Number(raw)
+      changed ||= value !== input.value
+      if (!Number.isFinite(value)) error = '请输入有效数字。'
+      else if (value < input.min || value > input.max) error = '输入数值超出允许范围。'
+      else numbers[input.id] = value
+    }
+    if (!error) {
+      try { result = evaluatePaperCalculation(block, numbers); if (!Number.isFinite(result)) error = '当前输入无法得到有限结果。' }
+      catch { error = '当前输入无法完成计算，请调整数值。' }
+    }
+    return h('section', { className: 'dsh-paper-wiki-content-block dsh-paper-wiki-calculation', 'aria-labelledby': prefix + '-title' },
+      h('div', { className: 'dsh-paper-wiki-content-heading' }, h('h3', { id: prefix + '-title' }, block.title), h(ModeLabel, { mode: block.mode, calculation: true })),
+      h('p', { className: 'dsh-paper-wiki-calculation-formula' }, block.formula),
+      h('div', { className: 'dsh-paper-wiki-calculation-inputs' }, block.inputs.map(input => {
+        const editable = illustrative && Number.isFinite(input.min) && Number.isFinite(input.max) && input.min < input.max
+        const raw = Object.hasOwn(overrides, input.id) ? overrides[input.id] : input.value
+        const numeric = Number(raw)
+        const quotient = (numeric - input.min) / input.step
+        const domStep = Number.isFinite(quotient)
+          && Math.abs(quotient - Math.round(quotient)) > 1e-8 * Math.max(1, Math.abs(quotient))
+          ? 'any' : input.step || 'any'
+        return h('div', { className: 'dsh-paper-wiki-calculation-input', key: input.id },
+          h('div', { className: 'dsh-paper-wiki-calculation-input-heading' }, h('label', { htmlFor: editable ? prefix + '-' + input.id : undefined }, input.label),
+            h('code', null, input.id), !editable && h('output', null, String(input.value))),
+          h('p', null, input.meaning),
+          editable && h('div', { className: 'dsh-paper-wiki-calculation-controls' },
+            h('input', { type: 'range', min: input.min, max: input.max, step: domStep,
+              value: Number.isFinite(numeric) ? Math.max(input.min, Math.min(input.max, numeric)) : input.value,
+              'aria-label': input.label + '：调节数值', onChange: event => change(previous => ({ ...previous, [input.id]: event.target.value })) }),
+            h('input', { id: prefix + '-' + input.id, type: 'number', min: input.min, max: input.max, step: domStep, value: raw,
+              onChange: event => change(previous => ({ ...previous, [input.id]: event.target.value })) })))
+      })),
+      h('div', { className: 'dsh-paper-wiki-calculation-result', 'aria-live': 'polite' }, h('span', null, block.resultLabel),
+        error ? h('p', { role: 'status' }, error) : h('output', null, result.toFixed(block.precision))),
+      h('p', { className: 'dsh-paper-wiki-calculation-interpretation' }, illustrative ? '初始值说明：' : '', block.interpretation),
+      illustrative && changed && h('button', { type: 'button', className: 'dsh-paper-wiki-calculation-reset', onClick: () => change({}) }, '恢复初始值'),
       h(References, { references: block.references }))
   }
 
@@ -201,9 +468,281 @@ function createPaperContentRenderer(React, primitives) {
       if (block.type === 'flow') return h(FlowBlock, { key, block })
       if (block.type === 'table') return h(TableBlock, { key, block })
       if (block.type === 'chart') return h(ChartBlock, { key, block })
+      if (block.type === 'terms') return h(TermsBlock, { key, block })
+      if (block.type === 'diagram') return h(DiagramBlock, { key, block })
+      if (block.type === 'evidence') return h(EvidenceBlock, { key, block })
+      if (block.type === 'calculation') return h(CalculationBlock, { key, block })
       return null
     }))
   }
+}
+
+
+const list = value => Array.isArray(value) ? value : []
+const text = value => typeof value === 'string' ? value : ''
+const html = value => text(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character])
+const finite = value => typeof value === 'number' && Number.isFinite(value)
+const jsonData = value => JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, character => '\\u' + character.charCodeAt(0).toString(16).padStart(4, '0'))
+const mode = value => value === 'illustrative' ? '构造示例（非论文原始样本）' : '论文实例'
+
+function citations(references) {
+  const pages = [...new Set(list(references).map(ref => ref?.page).filter(page => Number.isInteger(page) && page > 0 && page <= 150))]
+  return pages.length ? '<p class="pe-references">（第 ' + pages.join('、') + ' 页）</p>' : ''
+}
+
+function inline(markdown) {
+  const plain = text(markdown).replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\\([\\`*_{}\[\]()<>#!|~+.\-])/g, '$1')
+  return html(plain).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+}
+
+function tableCells(line) {
+  let source = line.trim()
+  if (source.startsWith('|')) source = source.slice(1)
+  if (source.endsWith('|') && !source.endsWith('\\|')) source = source.slice(0, -1)
+  const cells = [], current = []
+  let escaped = false
+  for (const character of source) {
+    if (character === '|' && !escaped) { cells.push(current.join('').trim()); current.length = 0 }
+    else current.push(character)
+    escaped = character === '\\' && !escaped
+  }
+  cells.push(current.join('').trim())
+  return cells
+}
+
+function legacyMarkdown(markdown) {
+  const lines = text(markdown).replace(/\r\n?/g, '\n').split('\n'), blocks = []
+  const fence = line => /^ {0,3}(`{3,}|~{3,})([^\s]*)\s*$/.exec(line)
+  const divider = line => tableCells(line).length >= 2 && tableCells(line).every(cell => /^:?-{3,}:?$/.test(cell))
+  for (let index = 0; index < lines.length;) {
+    const line = lines[index]
+    if (!line.trim()) { index++; continue }
+    const marker = fence(line)
+    if (marker) {
+      const code = [], language = ['json', 'python', 'text'].includes(marker[2]) ? marker[2] : 'text'
+      index++
+      while (index < lines.length) {
+        const close = fence(lines[index])
+        if (close && close[1][0] === marker[1][0] && close[1].length >= marker[1].length && !close[2]) { index++; break }
+        code.push(lines[index++])
+      }
+      blocks.push('<pre><code class="language-' + language + '">' + html(code.join('\n')) + '</code></pre>')
+      continue
+    }
+    const heading = /^ {0,3}(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line)
+    if (heading) {
+      const level = Math.min(6, heading[1].length + 2)
+      blocks.push('<h' + level + '>' + inline(heading[2]) + '</h' + level + '>'); index++; continue
+    }
+    if (index + 1 < lines.length && line.includes('|') && divider(lines[index + 1])) {
+      const columns = tableCells(line), rows = []
+      index += 2
+      while (index < lines.length && lines[index].trim() && lines[index].includes('|')) rows.push(tableCells(lines[index++]))
+      blocks.push('<div class="pe-table-scroll" tabindex="0"><table><thead><tr>' + columns.map(column => '<th scope="col">' + inline(column) + '</th>').join('')
+        + '</tr></thead><tbody>' + rows.map(row => '<tr>' + columns.map((_, cell) => '<td>' + inline(row[cell] || '') + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>')
+      continue
+    }
+    const bullet = /^\s*(?:[-*+] |\d+[.)] )/.exec(line)
+    if (bullet) {
+      const ordered = /^\s*\d/.test(line), items = []
+      const pattern = ordered ? /^\s*\d+[.)]\s+(.+)$/ : /^\s*[-*+]\s+(.+)$/
+      while (index < lines.length) {
+        const item = pattern.exec(lines[index]); if (!item) break
+        items.push('<li>' + inline(item[1]) + '</li>'); index++
+      }
+      blocks.push('<' + (ordered ? 'ol' : 'ul') + '>' + items.join('') + '</' + (ordered ? 'ol' : 'ul') + '>'); continue
+    }
+    const paragraph = [line]; index++
+    while (index < lines.length && lines[index].trim() && !fence(lines[index]) && !/^ {0,3}#{1,6}\s/.test(lines[index])
+      && !/^\s*(?:[-*+] |\d+[.)] )/.test(lines[index]) && !(index + 1 < lines.length && lines[index].includes('|') && divider(lines[index + 1]))) paragraph.push(lines[index++])
+    blocks.push('<p>' + inline(paragraph.join('\n')).replace(/\n/g, '<br>') + '</p>')
+  }
+  return blocks.join('\n')
+}
+
+function stepButton(label, target, action = 'select-card') {
+  return '<button type="button" data-export-action="' + action + '" data-target-id="' + target + '" aria-pressed="false">' + html(label) + '</button>'
+}
+
+function compactRelationLabel(value) {
+  const characters = [...text(value).replace(/\s+/g, ' ').trim()], lines = []
+  const units = character => character.codePointAt(0) <= 255 ? 1 : 2
+  let position = 0
+  while (position < characters.length && lines.length < 2) {
+    const line = []
+    let width = 0
+    while (position < characters.length && width + units(characters[position]) <= 10) {
+      width += units(characters[position]); line.push(characters[position++])
+    }
+    lines.push(line.join('').trim())
+  }
+  if (position < characters.length) {
+    const last = [...lines[lines.length - 1]]
+    while (last.reduce((sum, character) => sum + units(character), 0) > 8) last.pop()
+    lines[lines.length - 1] = last.join('').trimEnd() + '…'
+  }
+  if (!lines.length) lines.push('关系')
+  return lines.map(line => ({ text: line, width: Math.max(1, [...line].reduce((sum, character) => sum + units(character), 0) * 5) }))
+}
+
+function diagram(block, id) {
+  const columns = list(block.columns), nodes = list(block.nodes), edges = list(block.edges), steps = list(block.steps)
+  const positions = new Map(), rows = new Map()
+  for (const node of nodes) {
+    const column = Math.max(0, columns.findIndex(item => item.id === node.column)), row = rows.get(column) || 0
+    rows.set(column, row + 1); positions.set(node.id, { x: 40 + column * 260, y: 76 + row * 104, column, node })
+  }
+  const width = Math.max(590, columns.length * 260 + 70), labels = [], occupied = new Map()
+  let height = Math.max(220, 104 * Math.max(1, ...rows.values()) + 90)
+  const edgeSvg = edges.map((edge, index) => {
+    const from = positions.get(edge.from), to = positions.get(edge.to)
+    if (!from || !to) return ''
+    const forward = from.x < to.x, same = from.x === to.x
+    const x1 = from.x + (forward || same ? 200 : 0), x2 = to.x + (forward ? 0 : 200)
+    const y1 = from.y + 34, y2 = to.y + 34, bend = same ? x1 + 30 + (index % 3) * 12 : Math.max(36, Math.abs(x2 - x1) * .48)
+    const control1 = same ? bend : x1 + (forward ? bend : -bend), control2 = same ? bend : x2 + (forward ? -bend : bend)
+    const d = `M ${x1} ${y1} C ${control1} ${y1}, ${control2} ${y2}, ${x2} ${y2}`
+    const gap = same || forward ? from.column : from.column - 1, labelX = 270 + gap * 260
+    const pieces = compactRelationLabel(edge.label), labelWidth = Math.max(...pieces.map(piece => piece.width)) + 6, labelHeight = pieces.length * 12 + 8
+    let anchorX = labelX, anchorY = (y1 + y2) / 2
+    if (same) anchorX = x1 + .75 * (bend - x1)
+    else {
+      let low = 0, high = 1
+      for (let turn = 0; turn < 32; turn++) {
+        const t = (low + high) / 2, inverse = 1 - t
+        const x = inverse ** 3 * x1 + 3 * inverse ** 2 * t * control1 + 3 * inverse * t ** 2 * control2 + t ** 3 * x2
+        if ((x < labelX) === forward) low = t; else high = t
+      }
+      const t = (low + high) / 2
+      anchorY = y1 + (y2 - y1) * (3 * t ** 2 - 2 * t ** 3)
+    }
+    const taken = occupied.get(gap) || [], preferred = Math.max(56 + labelHeight / 2, anchorY)
+    let labelY
+    for (let attempt = 0; attempt <= edges.length * 2; attempt++) {
+      const direction = attempt % 2 ? 1 : -1
+      const candidate = preferred + direction * Math.ceil(attempt / 2) * (labelHeight + 8)
+      if (candidate - labelHeight / 2 < 56 || candidate + labelHeight / 2 > height - 14) continue
+      if (taken.every(other => Math.abs(candidate - other.y) >= (labelHeight + other.height) / 2 + 6)) { labelY = candidate; break }
+    }
+    if (labelY === undefined) {
+      labelY = Math.max(height - 14 + labelHeight / 2 + 8, ...taken.map(other => other.y + other.height / 2 + labelHeight / 2 + 8))
+      height = labelY + labelHeight / 2 + 20
+    }
+    taken.push({ y: labelY, height: labelHeight }); occupied.set(gap, taken)
+    const leader = Math.abs(anchorY - labelY) > 2 || Math.abs(anchorX - labelX) > 2
+      ? '<path class="pe-edge-label-leader" d="M ' + anchorX + ' ' + anchorY + ' L ' + labelX + ' ' + labelY + '"></path>' : ''
+    labels.push('<g class="pe-edge-label" data-edge-label-id="' + html(edge.id) + '" transform="translate(' + labelX + ' ' + labelY + ')"><title>' + html(edge.label) + '</title>'
+      + '<rect class="pe-edge-label-box" x="' + (-labelWidth / 2) + '" y="' + (-labelHeight / 2) + '" width="' + labelWidth + '" height="' + labelHeight + '" rx="4"></rect><text x="0" y="' + (pieces.length > 1 ? -3 : 3) + '">'
+      + pieces.map((piece, line) => '<tspan x="0" dy="' + (line ? 12 : 0) + '" textLength="' + piece.width + '" lengthAdjust="spacingAndGlyphs">' + html(piece.text) + '</tspan>').join('') + '</text></g>')
+    return '<g class="pe-edge" data-edge-id="' + html(edge.id) + '"><title>' + html(edge.label) + '</title><path d="' + d
+      + '" marker-end="url(#' + id + '-arrow)"></path></g>' + leader
+  }).join('')
+  const nodeSvg = [...positions.values()].map(({ x, y, node }) => {
+    const label = [...text(node.label)], pieces = []
+    for (let offset = 0; offset < Math.min(label.length, 28); offset += 14) pieces.push(label.slice(offset, offset + 14).join(''))
+    if (label.length > 28) pieces[1] += '…'
+    return '<g class="pe-node" role="button" tabindex="0" aria-pressed="false" aria-label="' + html(node.label) + '" data-export-action="diagram-node" data-node-id="' + html(node.id) + '">'
+      + '<title>' + html(node.label) + '：' + html(node.detail) + '</title><rect class="pe-node-box" x="' + x + '" y="' + y + '" width="200" height="68" rx="10"></rect>'
+      + '<text x="' + (x + 100) + '" y="' + (y + (pieces.length > 1 ? 28 : 39)) + '">' + pieces.map((piece, index) => '<tspan x="' + (x + 100) + '" dy="' + (index ? 20 : 0) + '">' + html(piece) + '</tspan>').join('') + '</text></g>'
+  }).join('')
+  return '<section class="pe-block pe-diagram" data-diagram id="' + id + '"><h3>' + html(block.title) + '</h3><p class="pe-mode">' + mode(block.mode) + '</p><p>' + html(block.description) + '</p>'
+    + '<div class="pe-diagram-scroll" tabindex="0" role="region" aria-label="' + html(block.title) + '：关系图"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + width + ' ' + height + '" role="group" aria-label="' + html(block.title) + '">'
+    + '<defs><marker id="' + id + '-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z"></path></marker></defs>'
+    + columns.map((column, index) => '<text class="pe-column-label" x="' + (140 + index * 260) + '" y="34">' + html(column.label) + '</text>').join('') + edgeSvg + labels.join('') + nodeSvg + '</svg></div>'
+    + '<div class="pe-diagram-controls" data-export-controls aria-label="关系图步骤">' + steps.map((step, index) => '<button type="button" data-export-action="diagram-step" data-step-index="' + index + '" data-active-nodes="' + html(jsonData(list(step.activeNodes))) + '" data-active-edges="' + html(jsonData(list(step.activeEdges))) + '" aria-pressed="false">' + (index + 1) + '. ' + html(step.label) + '</button>').join('') + '</div>'
+    + '<ol class="pe-diagram-explanations">' + steps.map((step, index) => '<li data-diagram-explanation="' + index + '"><strong>' + html(step.label) + '</strong><p>' + html(step.explanation) + '</p></li>').join('') + '</ol>'
+    + '<dl class="pe-node-details">' + nodes.map(node => '<div data-node-detail="' + html(node.id) + '"><dt>' + html(node.label) + '</dt><dd>' + html(node.detail) + '</dd></div>').join('') + '</dl>'
+    + '<ul class="pe-edge-details">' + edges.map(edge => '<li>' + html(positions.get(edge.from)?.node.label || edge.from) + ' → ' + html(positions.get(edge.to)?.node.label || edge.to) + '：' + html(edge.label) + '</li>').join('') + '</ul>' + citations(block.references) + '</section>'
+}
+
+function evidence(block, id) {
+  const items = new Map(list(block.items).map(item => [item.id, item])), required = list(block.required)
+  const budget = Number.isInteger(block.budget) ? Math.max(1, Math.min(8, block.budget)) : 1
+  let previous = []
+  const states = list(block.states).map((state, index) => {
+    const ids = list(state.ids), selected = ids.map(key => items.get(key)).filter(Boolean)
+    const covered = new Set(selected.flatMap(item => list(item.supports)).filter(value => required.includes(value)))
+    const added = index ? ids.filter(key => !previous.includes(key)) : [], removed = index ? previous.filter(key => !ids.includes(key)) : []
+    previous = ids
+    const slots = Array.from({ length: budget }, (_, slot) => {
+      const item = selected[slot]
+      return item ? '<li class="pe-evidence-slot" data-added="' + added.includes(item.id) + '"><strong>' + html(item.label) + '</strong>' + (added.includes(item.id) ? '<small>新增</small>' : '') + '<p>' + html(item.detail) + '</p><small>支持：' + list(item.supports).map(html).join('；') + '</small></li>' : '<li class="pe-evidence-slot pe-slot-empty">空位</li>'
+    }).join('')
+    return '<section class="pe-evidence-state" data-selectable id="' + id + '-state-' + index + '"><h4>' + stepButton(state.label, id + '-state-' + index) + '</h4>'
+      + '<p>' + html(state.explanation) + '</p><p class="pe-evidence-count">已用 ' + selected.length + ' / ' + budget + ' 个位置 · 关系覆盖 <strong>' + covered.size + ' / ' + required.length + '</strong></p>'
+      + '<ol class="pe-evidence-slots">' + slots + '</ol>' + (removed.length ? '<p class="pe-removed">移除：' + removed.map(key => html(items.get(key)?.label || key)).join('、') + '</p>' : '')
+      + '<ul class="pe-coverage">' + required.map(relation => '<li data-covered="' + covered.has(relation) + '">' + (covered.has(relation) ? '已覆盖：' : '缺失：') + html(relation) + '</li>').join('') + '</ul></section>'
+  }).join('')
+  return '<section class="pe-block pe-evidence" data-export-selection id="' + id + '"><h3>' + html(block.title) + '</h3><p class="pe-mode">' + mode(block.mode) + '</p><p>问题：' + html(block.question) + '</p><p>固定段落预算：' + budget + ' 个位置</p>'
+    + '<div class="pe-evidence-states" data-export-controls>' + states + '</div><details open class="pe-candidate-details"><summary>全部候选段落</summary><dl>' + [...items.values()].map(item => '<div><dt>' + html(item.label) + '</dt><dd>' + html(item.detail) + '；支持：' + list(item.supports).map(html).join('；') + '</dd></div>').join('') + '</dl></details>' + citations(block.references) + '</section>'
+}
+
+function calculationPayload(block) {
+  let nodes = 0
+  const expression = (node, depth = 1) => {
+    if (++nodes > 64 || depth > 6 || !node || typeof node !== 'object') return null
+    if (typeof node.input === 'string') return { input: node.input }
+    if (finite(node.number)) return { number: node.number }
+    if (['add', 'subtract', 'multiply', 'divide'].includes(node.op) && Array.isArray(node.args) && node.args.length <= 8) return { op: node.op, args: node.args.map(argument => expression(argument, depth + 1)) }
+    return null
+  }
+  return { type: 'calculation', mode: block.mode, precision: block.precision, inputs: list(block.inputs).map(input => ({ id: text(input.id), value: input.value,
+    ...Object.fromEntries(['min', 'max', 'step'].filter(key => Object.hasOwn(input, key)).map(key => [key, input[key]])) })), expression: expression(block.expression) }
+}
+
+function calculation(block, id, calculations) {
+  const payload = calculationPayload(block)
+  let result, valid = true
+  try { result = evaluatePaperCalculation(payload) } catch { valid = false }
+  if (valid) calculations.push({ id, block: payload })
+  const inputs = list(block.inputs).map((input, index) => {
+    const inputId = id + '-input-' + index, ranged = valid && block.mode === 'illustrative' && ['min', 'max', 'step'].every(key => finite(input[key]))
+    const quotient = ranged ? (input.value - input.min) / input.step : 0
+    const continuous = ranged && (!Number.isFinite(quotient) || Math.abs(quotient - Math.round(quotient)) > 1e-8 * Math.max(1, Math.abs(quotient)))
+    const step = continuous ? 'any' : input.step
+    return '<div class="pe-calculation-input"><label for="' + inputId + '">' + html(input.label) + '</label><output data-calc-input-value="' + html(input.id) + '" ' + (ranged ? 'for="' : 'id="') + inputId + '">' + (finite(input.value) ? String(input.value) : '—') + '</output><p>' + html(input.meaning) + '</p>'
+      + (ranged ? '<input type="range" id="' + inputId + '" data-calc-input="' + html(input.id) + '" min="' + input.min + '" max="' + input.max + '" step="' + step + '" value="' + input.value + '">' : '<span class="pe-fixed-value">固定参数</span>') + '</div>'
+  }).join('')
+  const formatted = valid ? result.toFixed(payload.precision) : '当前参数无法计算。'
+  return '<section class="pe-block pe-calculation" data-calculation id="' + id + '"><h3>' + html(block.title) + '</h3><p class="pe-mode">' + mode(block.mode) + '</p><p class="pe-formula"><code>' + html(block.formula) + '</code></p><div class="pe-calculation-inputs">' + inputs + '</div>'
+    + '<p class="pe-calculation-result"><span>' + html(block.resultLabel) + '</span><output data-calculation-result aria-live="polite" data-raw-value="' + (valid ? result : '') + '">' + formatted + '</output></p><p>' + html(block.interpretation) + '</p>' + citations(block.references) + '</section>'
+}
+
+function renderBlock(block, id, calculations) {
+  if (!block || typeof block !== 'object') return ''
+  if (block.type === 'paragraph') return '<div class="pe-paragraph"><p>' + html(block.text) + '</p>' + citations(block.references) + '</div>'
+  if (block.type === 'diagram') return diagram(block, id)
+  if (block.type === 'evidence') return evidence(block, id)
+  if (block.type === 'calculation') return calculation(block, id, calculations)
+  const heading = '<h3>' + html(block.title) + '</h3>', refs = citations(block.references)
+  if (block.type === 'terms') return '<section class="pe-block pe-terms">' + heading + '<dl>' + list(block.items).map(item => '<div><dt>' + html(item.term) + '</dt><dd><p><strong>含义：</strong>' + html(item.meaning) + '</p><p><strong>作用：</strong>' + html(item.role) + '</p><p><strong>本例：</strong>' + html(item.example) + '</p>' + (item.contrast ? '<p><strong>易混区别：</strong>' + html(item.contrast) + '</p>' : '') + '</dd></div>').join('') + '</dl>' + refs + '</section>'
+  if (block.type === 'example') return '<section class="pe-block pe-example" data-export-selection>' + heading + '<p class="pe-mode">' + mode(block.mode) + '</p><ol class="pe-steps" data-export-controls>' + list(block.steps).map((step, index) => '<li data-selectable id="' + id + '-step-' + index + '"><h4>' + stepButton((index + 1) + '. ' + text(step.label), id + '-step-' + index) + '</h4><pre><code>' + html(step.code) + '</code></pre><p>' + html(step.explanation) + '</p></li>').join('') + '</ol>' + refs + '</section>'
+  if (block.type === 'flow') return '<section class="pe-block pe-flow" data-export-selection>' + heading + '<ol class="pe-steps" data-export-controls>' + list(block.steps).map((step, index) => '<li data-selectable id="' + id + '-step-' + index + '"><h4>' + stepButton((index + 1) + '. ' + text(step.title), id + '-step-' + index) + '</h4><dl>' + [['输入', step.input], ['操作', step.operation], ['输出', step.output]].map(([label, value]) => '<dt>' + label + '</dt><dd>' + html(value) + '</dd>').join('') + '</dl></li>').join('') + '</ol>' + refs + '</section>'
+  if (block.type === 'table') return '<section class="pe-block pe-table"><div class="pe-table-scroll" role="region" tabindex="0" aria-label="' + html(block.title) + '"><table><caption>' + html(block.title) + '</caption><thead><tr>' + list(block.columns).map(column => '<th scope="col">' + html(column) + '</th>').join('') + '</tr></thead><tbody>' + list(block.rows).map(row => '<tr>' + list(row).map(cell => '<td>' + html(cell) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>' + refs + '</section>'
+  if (block.type === 'chart') {
+    const data = list(block.data).filter(point => finite(point?.value)), magnitude = Math.max(1, ...data.map(point => Math.abs(point.value)))
+    const minimum = Math.min(0, ...data.map(point => point.value)), maximum = Math.max(0, ...data.map(point => point.value))
+    const low = minimum / magnitude, span = maximum / magnitude - low || 1, zero = -low / span * 100
+    return '<figure class="pe-block pe-chart">' + '<figcaption>' + html(block.title) + '</figcaption><p>' + html(block.context) + '</p><p>' + html(block.metric) + '（' + html(block.unit) + '）· ' + (block.direction === 'lower' ? '越低越好' : '越高越好') + '</p><ol>' + data.map(point => {
+      const value = point.value / magnitude, left = (Math.min(value, 0) - low) / span * 100, width = Math.abs(value) / span * 100
+      return '<li><div class="pe-chart-label"><span>' + html(point.label) + '</span><strong>' + html(point.display) + '</strong></div><div class="pe-chart-track" aria-hidden="true"><span class="pe-chart-bar" data-negative="' + (point.value < 0) + '" style="left:' + left + '%;width:' + width + '%"></span><span class="pe-chart-zero" style="left:' + zero + '%"></span></div>' + citations([point.reference]) + '</li>'
+    }).join('') + '</ol><div class="pe-chart-axis"><span>' + minimum + '</span><span>' + maximum + '</span></div>' + refs + '</figure>'
+  }
+  return '<p class="pe-note">此内容块暂不支持 HTML 展示。</p>'
+}
+
+/** Export explanation fields only; PDF pages and source quotations never enter the document or script data. */
+function createPaperHtml(paper, { styles = '', behavior = '' } = {}) {
+  const explanation = paper?.explanation
+  if (!explanation || !Array.isArray(explanation.chapters) || !explanation.chapters.length) throw new TypeError('Paper explanation is required')
+  const title = text(explanation.title) || text(paper.title) || '论文讲解', calculations = []
+  const chapters = explanation.chapters.map((chapter, index) => {
+    const body = Array.isArray(chapter.blocks) && chapter.blocks.length ? chapter.blocks.map((block, blockIndex) => renderBlock(block, 'pe-c' + index + '-b' + blockIndex, calculations)).join('\n') : legacyMarkdown(chapter.markdown)
+    return '<section class="pe-chapter" id="chapter-' + (index + 1) + '"><h2><span>' + (index + 1) + '</span>' + html(chapter.title) + '</h2>' + body + '</section>'
+  }).join('\n')
+  const script = ';(() => {\n"use strict";\nconst evaluatePaperCalculation = (' + evaluatePaperCalculation.toString() + ');\n' + text(behavior) + '\n})();'
+  return '<!doctype html>\n<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src data:; font-src data:; connect-src \'none\'; base-uri \'none\'; form-action \'none\'"><title>' + html(title) + '</title><style>' + text(styles).replace(/<\/style/gi, '<\\/style') + '</style></head><body><main class="paper-export"><header class="pe-header"><p class="pe-eyebrow">论文百科 · 完整讲解</p><h1>' + html(title) + '</h1>' + (paper.fileName ? '<p class="pe-file-name">' + html(paper.fileName) + '</p>' : '') + '</header><nav class="pe-directory" aria-label="章节目录">' + explanation.chapters.map((chapter, index) => '<a href="#chapter-' + (index + 1) + '">' + (index + 1) + '. ' + html(chapter.title) + '</a>').join('') + '</nav><article>' + chapters + '</article></main><script type="application/json" id="paper-export-calculations">' + jsonData(calculations) + '</script><script>' + script.replace(/<\/script/gi, '<\\/script') + '</script></body></html>\n'
 }
 
 window.__ModuleLoader__.load({
@@ -237,7 +776,7 @@ window.__ModuleLoader__.load({
       const explanation = value.explanation
       if (explanation && (!Array.isArray(explanation.chapters) || !explanation.chapters.length
         || explanation.chapters.some(chapter => typeof chapter.id !== 'string' || typeof chapter.title !== 'string' || typeof chapter.markdown !== 'string'
-          || chapter.blocks !== undefined && (!Array.isArray(chapter.blocks) || !chapter.blocks.length || chapter.blocks.length > 10 || chapter.blocks.some(block => !block || !['paragraph', 'example', 'flow', 'table', 'chart'].includes(block.type)))))) return null
+          || chapter.blocks !== undefined && (!Array.isArray(chapter.blocks) || !chapter.blocks.length || chapter.blocks.length > 10 || chapter.blocks.some(block => !block || !['paragraph', 'example', 'flow', 'table', 'chart', 'terms', 'diagram', 'evidence', 'calculation'].includes(block.type)))))) return null
       return { ...item, warnings: Array.isArray(value.warnings) ? value.warnings.filter(item => typeof item === 'string') : [], explanation }
     }
     function validJob(value) {
@@ -526,6 +1065,13 @@ window.__ModuleLoader__.load({
       link.href = url; link.download = paper.fileName.replace(/\.pdf$/i, '') + '-讲解.md'; link.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
+    function downloadHtml(paper) {
+      const html = createPaperHtml(paper, { styles: paperExportStyles, behavior: paperExportBehavior })
+      const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }))
+      const link = document.createElement('a')
+      link.href = url; link.download = paper.fileName.replace(/\.pdf$/i, '') + '-讲解.html'; link.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
     function ChapterDirectory({ state, store }) {
       const selectId = useId(), chapters = state.result.explanation.chapters
       return h('nav', { 'aria-label': '讲解章节' }, h('h2', { className: 'dsh-paper-wiki-rail-label' }, '章节目录'),
@@ -539,24 +1085,38 @@ window.__ModuleLoader__.load({
     function PaperReader({ store, state }) {
       const paper = state.result, explanation = paper.explanation
       const chapter = explanation?.chapters[state.chapter]
-      const heading = useRef(null)
+      const heading = useRef(null), sections = useRef({}), previous = useRef(null)
+      const continuous = explanation?.version >= 3
       const active = state.generation && !terminal.has(state.generation.phase)
-      useEffect(() => { heading.current?.focus({ preventScroll: true }) }, [paper.id, state.chapter])
+      useEffect(() => {
+        const changed = previous.current?.id === paper.id && previous.current.chapter !== state.chapter
+        if (continuous && changed) {
+          const target = sections.current?.[chapter?.id]
+          target?.scrollIntoView({ block: 'start' }); target?.focus({ preventScroll: true })
+        } else heading.current?.focus({ preventScroll: true })
+        previous.current = { id: paper.id, chapter: state.chapter }
+      }, [paper.id, state.chapter, continuous])
       return h('div', { className: 'dsh-paper-wiki-reader' },
         h('div', { className: 'dsh-paper-wiki-reader-heading' }, h('div', null, h('p', { className: 'dsh-paper-wiki-eyebrow' }, '本地论文 · ' + paper.pageCount + ' 页'),
           h('h1', { ref: heading, tabIndex: -1 }, paper.title), h('p', { className: 'dsh-paper-wiki-file-name' }, paper.fileName)),
-          explanation && h('div', { className: 'dsh-paper-wiki-actions' }, h(Button, { size: 'sm', variant: 'outline', onClick: () => downloadMarkdown(paper) }, '导出讲解'),
+          explanation && h('div', { className: 'dsh-paper-wiki-actions' }, h(Button, { size: 'sm', variant: 'outline', onClick: () => continuous ? downloadHtml(paper) : downloadMarkdown(paper) }, continuous ? '导出 HTML' : '导出讲解'),
             h(Button, { size: 'sm', variant: 'primary', disabled: state.importing || state.generating || active,
               onClick: () => void store.generate() }, state.generating ? '正在提交…' : '重新讲解'))),
         paper.warnings.length > 0 && h('div', { className: 'dsh-paper-wiki-warning', role: 'note' }, paper.warnings.map((warning, index) => h('p', { key: index }, warning))),
         explanation ? h('div', { className: 'dsh-paper-wiki-columns' }, h('aside', { className: 'dsh-paper-wiki-sidebar' }, h(ChapterDirectory, { state, store })),
           h('article', { className: 'dsh-paper-wiki-article', 'aria-label': '论文讲解' },
-            h('header', { className: 'dsh-paper-wiki-article-header' }, h('h2', { className: 'dsh-paper-wiki-article-title' }, chapter.title),
-              h('div', { className: 'dsh-paper-wiki-meta' }, h('span', null, '中文讲解'),
+            (continuous ? explanation.chapters : [chapter]).map((item, index) => h('section', {
+              key: paper.id + '-' + explanation.createdAt + '-' + item.id,
+              className: 'dsh-paper-wiki-lesson-section', 'aria-labelledby': 'paper-' + paper.id + '-' + item.id,
+            }, h('header', { className: 'dsh-paper-wiki-article-header' }, h('h2', {
+                className: 'dsh-paper-wiki-article-title', id: 'paper-' + paper.id + '-' + item.id, tabIndex: -1,
+                ref: node => { if (sections.current) sections.current[item.id] = node },
+              }, item.title),
+              (!continuous || index === 0) && h('div', { className: 'dsh-paper-wiki-meta' }, h('span', null, '中文讲解'),
                 explanation.model && h('span', null, explanation.model), explanation.createdAt && h('time', { dateTime: explanation.createdAt }, dateFormat.format(new Date(explanation.createdAt))))),
-            h('div', { className: 'dsh-paper-wiki-prose' }, chapter.blocks
-              ? h(PaperContent, { key: paper.id + '-' + explanation.createdAt + '-' + chapter.id, chapter, labels })
-              : h(MarkdownText, { text: sourceMarkdown(chapter.markdown, paper), omitHtml: true, labels }))))
+              h('div', { className: 'dsh-paper-wiki-prose' }, item.blocks
+                ? h(PaperContent, { key: paper.id + '-' + explanation.createdAt + '-' + item.id, chapter: item, labels })
+                : h(MarkdownText, { text: sourceMarkdown(item.markdown, paper), omitHtml: true, labels }))))))
           : h('div', { className: 'dsh-paper-wiki-explanation-empty' },
             h(Button, { variant: 'primary', disabled: state.importing || state.generating || active, onClick: () => void store.generate() }, '生成讲解')))
 
@@ -572,7 +1132,8 @@ window.__ModuleLoader__.load({
       const state = useSyncExternalStore(store.subscribe, store.getSnapshot), page = useRef(null)
       const formId = useId()
       useEffect(() => store.initialize(), [store])
-      useEffect(() => { if (page.current) page.current.scrollTop = 0 }, [state.result?.id, state.chapter])
+      useEffect(() => { if (page.current) page.current.scrollTop = 0 }, [state.result?.id])
+      useEffect(() => { if (page.current && !(state.result?.explanation?.version >= 3)) page.current.scrollTop = 0 }, [state.chapter])
       const active = state.generation && !terminal.has(state.generation.phase)
       const generation = state.preparing || state.generation
       const showProgress = generation && generation.phase !== 'completed'

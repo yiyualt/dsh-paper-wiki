@@ -14,7 +14,7 @@ function explanationRecord(value, paper) {
   if (!value || !string(value.title, 300) || !string(value.summary, 6000)
     || !string(value.model, 500) || !['string', 'number'].includes(typeof value.createdAt) || !Number.isFinite(Date.parse(value.createdAt))
     || !Number.isSafeInteger(value.durationMs) || value.durationMs < 0
-    || (value.version !== undefined && value.version !== 2)
+    || (value.version !== undefined && ![2, 3].includes(value.version))
     || !Array.isArray(value.chapters) || !value.chapters.length || value.chapters.length > 12
     || new Set(value.chapters.map(chapter => chapter?.id)).size !== value.chapters.length) return
   const chapters = []
@@ -31,8 +31,8 @@ function explanationRecord(value, paper) {
     chapters.push({ id: chapter.id, title: chapter.title, markdown: chapter.markdown,
       ...(blocks && { blocks }) })
   }
-  if (value.version === 2 && !hasBlocks) return
-  return { ...(value.version === 2 && { version: 2 }), title: value.title, summary: value.summary,
+  if ([2, 3].includes(value.version) && !hasBlocks) return
+  return { ...([2, 3].includes(value.version) && { version: value.version }), ...(value.version === 3 && { skill: 'paper-explainer' }), title: value.title, summary: value.summary,
     model: value.model, createdAt: value.createdAt, durationMs: value.durationMs, chapters }
 }
 

@@ -48,7 +48,9 @@ try {
     `assert.equal(manifest.version, ${JSON.stringify(manifest.version)})\n` +
     `assert(import.meta.resolve('dsh-paper-wiki/client').endsWith('/client.js'))\n` +
     `const pdfjs=await import('pdfjs-dist/legacy/build/pdf.mjs')\n` +
-    `assert.equal(typeof pdfjs.getDocument, 'function'); assert.equal(pdfjs.version, ${JSON.stringify(manifest.dependencies['pdfjs-dist'])})\n`)
+    `assert.equal(typeof pdfjs.getDocument, 'function'); assert.equal(pdfjs.version, ${JSON.stringify(manifest.dependencies['pdfjs-dist'])})\n` +
+    `const skillModule=await import('./node_modules/dsh-paper-wiki/src/paper-skill.js')\n` +
+    `assert((await skillModule.loadPaperExplainerSkill()).length > 100)\n`)
   await exec(process.execPath, [probe], { cwd: install, timeout: 30_000, windowsHide: true })
   const sha256 = createHash('sha256').update(await readFile(join(temporary, packed.filename))).digest('hex')
   console.log(JSON.stringify({ version: manifest.version, files: paths.length, cleanOfflineInstall: true,

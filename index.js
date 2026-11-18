@@ -146,7 +146,7 @@ export function apply(ctx, config = {}) {
   })
 
   async function run(job, paper) {
-    const timeout = AbortSignal.timeout(12 * 60_000)
+    const timeout = AbortSignal.timeout(18 * 60_000)
     const signal = AbortSignal.any([lifetime.signal, job.controller.signal, timeout])
     try {
       let llm = ctx.llm, selection
@@ -168,7 +168,7 @@ export function apply(ctx, config = {}) {
     } catch (error) {
       job.phase = job.controller.signal.aborted || lifetime.signal.aborted ? 'cancelled' : 'failed'
       job.error = job.phase === 'cancelled' ? '讲解已取消，论文存档和已有讲解已保留。'
-        : timeout.aborted ? '讲解超过 12 分钟上限，请重试。'
+        : timeout.aborted ? '讲解超过 18 分钟上限，请重试。'
           : error?.status ? error.message : '讲解保存失败，请检查数据目录后重试。'
     } finally {
       job.finishedAt = Date.now()
