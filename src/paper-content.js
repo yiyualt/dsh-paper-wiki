@@ -1,6 +1,10 @@
 import { evaluatePaperCalculation } from './paper-calculation.js'
 
-const normalize = value => value.normalize('NFKC').replace(/[\s\u00ad\u200b]/g, '')
+// Preserve PDF control glyphs, including VT/FF, when grounding a quote. Ordinary
+// layout whitespace remains interchangeable, but a model cannot invent a glyph.
+const normalize = value => value.normalize('NFKC').replace(/[\s\u00ad\u200b]/g, character =>
+  character === '\u000b' || character === '\u000c' ? character : '')
+const readableLength = value => normalize(value).replace(/[\u0000-\u001f\u007f]/g, '').length
 const languages = new Set(['json', 'python', 'text'])
 const numericToken = /^[+-]?(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?%?$/
 const quotedNumbers = /(?<![\d.,])[+\-\u2212]?(?:(?:\d{1,3}(?:,\s*\d{3})+|\d+)(?:\.\d+)?|\.\d+)(?:[eE][+\-\u2212]?\d+)?\s*%?(?![\d,]|\.\d)/g
@@ -76,9 +80,13 @@ function canonicalBlocks(pages, blocks, chapterId) {
   function reference(value) {
     if (!record(value) || !Number.isInteger(value.page) || value.page < 1 || value.page > 150
       || pages && !pages.has(value.page)) invalid('引用页码不存在。', chapterId)
-    const quote = field(value.quote, 450, '原文引句')
+    // Source quotations are immutable extracted data, not user-facing prose.
+    // A real PDF may contain unmapped control glyphs; retain them only when the
+    // same sequence is grounded in its actual page, never by deleting them.
+    const quote = value.quote
+    if (typeof quote !== 'string' || !quote.trim() || quote.length > 450) invalid('原文引句格式无效。', chapterId)
     const normalized = normalize(quote)
-    if (normalized.length < 8 || pages && !pages.get(value.page).normalized.includes(normalized)) invalid('引用与对应页的原文不符。', chapterId)
+    if (readableLength(quote) < 8 || pages && !pages.get(value.page).normalized.includes(normalized)) invalid('引用与对应页的原文不符。', chapterId)
     return { page: value.page, quote }
   }
   function references(value) {
@@ -109,7 +117,7 @@ function canonicalBlocks(pages, blocks, chapterId) {
     const refs = references(block.references)
     if (block.type === 'paragraph') return { type: 'paragraph', text: field(block.text, 3000, '正文'), references: refs }
     if (block.type === 'terms') {
-      array(block.items, 2, 10, '术语说明需要 2 至 10 项。', chapterId)
+      array(block.items, 1, 10, '术语说明需要 1 至 10 项。', chapterId)
       const items = block.items.map(item => {
         if (!record(item)) invalid('术语说明格式无效。', chapterId)
         return { term: field(item.term, 100, '术语'), meaning: field(item.meaning, 600, '术语含义'),

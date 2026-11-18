@@ -5,7 +5,7 @@ const languages = new Set(['json', 'python', 'text'])
 const record = value => value && typeof value === 'object' && !Array.isArray(value)
 const invalid = message => { throw Object.assign(new Error(message), { code: 'explanation-invalid', status: 502 }) }
 function text(value, maximum, label) {
-  if (typeof value !== 'string' || !value.trim() || value.length > maximum || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) invalid(label + '格式无效或过长。')
+  if (typeof value !== 'string' || !value.trim() || value.length > maximum || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)) invalid(label + '格式无效或过长。')
   return value.trim()
 }
 

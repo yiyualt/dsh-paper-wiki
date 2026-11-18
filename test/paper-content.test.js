@@ -226,12 +226,20 @@ test('validates the four richer teaching blocks while retaining only declarative
 })
 
 test('terms require a definition, method role and concrete example for every item', () => {
-  for (const mutate of [block => { block.items.pop() }, block => { block.items[0] = null },
+  for (const mutate of [block => { block.items = [] }, block => { block.items[0] = null },
     block => { block.items[0].meaning = '' }, block => { block.items[0].role = {} },
     block => { block.items[0].example = 'x'.repeat(801) }, block => { block.items[0].contrast = [] }]) {
     const block = terms(); mutate(block)
     assert.throws(() => validateContentBlocks(paper, [block]), invalid)
   }
+})
+
+test('one locally introduced term is valid without forcing an unrelated second definition', () => {
+  const block = terms(); block.items = [block.items[0]]
+  const result = validateContentBlocks(paper, [block], 'setup')[0]
+  assert.equal(result.items.length, 1)
+  assert.deepEqual(result.items[0], block.items[0])
+  assert(renderContentMarkdown([result]).includes(result.items[0].term))
 })
 
 test('diagrams reject unknown endpoints, invalid activation, self loops and duplicate IDs', () => {
@@ -277,4 +285,41 @@ test('Markdown exports every richer definition, graph step, evidence state and c
   assert.equal((markdown.match(/构造示例（非论文原始样本）/g) ?? []).length, 3)
   assert.equal((markdown.match(/第 1 页/g) ?? []).length, 4)
   assert.ok(!markdown.includes(ref.quote), 'the exact original quote is never exposed by the teaching export')
+})
+
+const pdfControls = [...Array(32).keys()].filter(code => ![9, 10, 13].includes(code)).concat(127).map(code => String.fromCharCode(code))
+
+test('exact PDF control glyphs remain valid in source quotations while invented controls cannot be grounded', () => {
+  for (const control of pdfControls) {
+    const quote = 'The source identifies the first operand ' + control + ' and the second operand.'
+    const source = { pages: [{ number: 1, text: quote }] }
+    const block = { type: 'paragraph', text: '逐页可核对的关系。', references: [{ page: 1, quote }] }
+    assert.equal(validateContentBlocks(source, [block])[0].references[0].quote, quote)
+    const unchanged = { pages: [{ number: 1, text: quote.replace(control, '') }] }
+    assert.throws(() => validateContentBlocks(unchanged, [block]), /引用与对应页的原文不符/)
+    const omitted = structuredClone(block); omitted.references[0].quote = quote.replace(control, '')
+    assert.throws(() => validateContentBlocks(source, [omitted]), /引用与对应页的原文不符/)
+    const visible = structuredClone(block); visible.text += control
+    assert.throws(() => validateContentBlocks(source, [visible]), /正文格式无效/)
+  }
+})
+
+test('quote length and readable-content limits remain strict despite real PDF control glyphs', () => {
+  for (const quote of [null, {}, '', ' '.repeat(10), '\u0001'.repeat(20), 'abcdefg' + '\u0001'.repeat(20), 'a'.repeat(451)]) {
+    const source = { pages: [{ number: 1, text: typeof quote === 'string' ? quote : 'Enough original source text remains present.' }] }
+    const block = { type: 'paragraph', text: '内容。', references: [{ page: 1, quote }] }
+    assert.throws(() => validateContentBlocks(source, [block]), error => error.code === 'explanation-invalid')
+  }
+})
+
+test('control glyphs between numbers never manufacture a larger chart observation', () => {
+  for (const control of pdfControls) {
+    const quote = 'The recorded sequence contains 12' + control + '34 and the separate value is 6.'
+    const source = { pages: [{ number: 1, text: quote }] }, reference = { page: 1, quote }
+    const block = { type: 'chart', title: '原文数值', context: '同一记录中的独立数字', metric: '数值', unit: '原始单位', direction: 'higher',
+      references: [reference], data: [{ label: '第一数值', value: 12, display: '12', reference }, { label: '独立数值', value: 6, display: '6', reference }] }
+    assert.equal(validateContentBlocks(source, [block])[0].data[0].value, 12)
+    block.data[0] = { ...block.data[0], value: 1234, display: '1234' }
+    assert.throws(() => validateContentBlocks(source, [block]), /完整数值/)
+  }
 })

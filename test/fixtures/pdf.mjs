@@ -1,5 +1,5 @@
 /** Small deterministic PDF, independent of the PDF parser under test. */
-export function createPdf(texts, title = 'A local paper', { unicode = false, encrypted = false, wrap = false } = {}) {
+export function createPdf(texts, title = 'A local paper', { unicode = false, encrypted = false, wrap = false, unicodeMap } = {}) {
   const objects = [null, '<< /Type /Catalog /Pages 2 0 R >>', '', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>']
   const kids = []
   for (const text of texts) {
@@ -13,8 +13,9 @@ export function createPdf(texts, title = 'A local paper', { unicode = false, enc
   objects[2] = `<< /Type /Pages /Count ${texts.length} /Kids [${kids.join(' ')}] >>`
   const info = objects.length
   objects.push(`<< /Title (${title.replace(/[\\()]/g, '\\$&')}) >>`)
-  if (unicode) {
-    const map = '/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /FixtureUnicode def\n/CMapType 2 def\n1 begincodespacerange\n<00> <FF>\nendcodespacerange\n4 beginbfchar\n<41> <4E2D>\n<42> <6587>\n<43> <8BBA>\n<44> <6587>\nendbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend'
+  if (unicode || unicodeMap) {
+    const entries = Object.entries(unicodeMap ?? { '41': '4E2D', '42': '6587', '43': '8BBA', '44': '6587' })
+    const map = '/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /FixtureUnicode def\n/CMapType 2 def\n1 begincodespacerange\n<00> <FF>\nendcodespacerange\n' + entries.length + ' beginbfchar\n' + entries.map(([from, to]) => '<' + from + '> <' + to + '>').join('\n') + '\nendbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend'
     objects[3] = `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode ${objects.length} 0 R >>`
     objects.push(`<< /Length ${Buffer.byteLength(map)} >>\nstream\n${map}\nendstream`)
   }

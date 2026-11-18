@@ -1,6 +1,11 @@
+import { validateContentBlocks } from './paper-content.js'
+
 const MAX_SEGMENT = 420
 const OVERLAP = 72
-const normalize = value => value.normalize('NFKC').replace(/[\s\u00ad\u200b]/g, '')
+const normalize = value => value.normalize('NFKC').replace(/[\s\u00ad\u200b]/g, character =>
+  character === '\u000b' || character === '\u000c' ? character : '')
+const readableLength = value => normalize(value).replace(/[\u0000-\u001f\u007f]/g, '').length
+const modelText = value => value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, ' ')
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const numbers = /[+\-−＋－]?(?:(?:[0-9０-９]{1,3}(?:[,，]\s*[0-9０-９]{3})+|[0-9０-９]+)(?:[.．][0-9０-９]+)?|[.．][0-9０-９]+)(?:[eEｅＥ][+\-−＋－]?[0-9０-９]+)?\s*[%％]?/g
 
@@ -10,7 +15,7 @@ function invalid(message, location) {
 }
 
 function splitPage(text) {
-  if (normalize(text).length < 8) return []
+  if (readableLength(text) < 8) return []
   const numericRanges = [...text.matchAll(numbers)].map(match => {
     const token = match[0].trimEnd()
     return { start: match.index, end: match.index + token.length }
@@ -46,7 +51,7 @@ function splitPage(text) {
     }
     const preferred = sentence >= maximum - 70 ? sentence : line >= 0 ? line : word >= 0 ? word : maximum
     const adjusted = avoidNumber(preferred, start, maximum, 'end')
-    return normalize(text.slice(start, adjusted)).length >= 8 ? adjusted : maximum
+    return readableLength(text.slice(start, adjusted)) >= 8 ? adjusted : maximum
   }
   const result = []
   let start = 0
@@ -54,9 +59,9 @@ function splitPage(text) {
     const end = endOf(start)
     let first = start
     // A short final tail may need more preceding context to make a valid quote.
-    if (normalize(text.slice(first, end)).length < 8) first = Math.max(0, end - MAX_SEGMENT)
+    if (readableLength(text.slice(first, end)) < 8) first = Math.max(0, end - MAX_SEGMENT)
     const quote = text.slice(first, end)
-    if (normalize(quote).length >= 8) result.push(quote)
+    if (readableLength(quote) >= 8) result.push(quote)
     if (end >= text.length) break
     const desired = Math.max(start + 1, end - OVERLAP)
     let next = desired, distance = Infinity
@@ -87,7 +92,7 @@ export function createEvidenceCatalog(paper) {
     rendered.push(`--- PDF 第 ${page.number} 页 ---`)
     const segments = splitPage(page.text)
     if (!segments.length) {
-      rendered.push(page.text ? '本页文字不足以形成可引用片段。\n' + page.text : '本页没有可提取文字。')
+      rendered.push(page.text ? '本页文字不足以形成可引用片段。\n' + modelText(page.text) : '本页没有可提取文字。')
       continue
     }
     segments.forEach((quote, index) => {
@@ -96,8 +101,20 @@ export function createEvidenceCatalog(paper) {
       sources.set(sourceId, reference)
       const key = page.number + '\u0000' + quote.trim()
       if (!exactQuotes.has(key)) exactQuotes.set(key, sourceId)
-      rendered.push(`[来源 ${sourceId}]\n${quote}`)
+      rendered.push(`[来源 ${sourceId}]\n${modelText(quote)}`)
     })
+  }
+  if (!sources.size) invalid('论文没有可用于引用的可读文字，请使用有文字层的 PDF 或先进行 OCR。')
+  // Every offered ID must pass the same grounding checker used after generation.
+  // Restrict each batch to its real pages so large papers are not re-read in full.
+  const originalPages = new Map(paper.pages.map(page => [page.number, page]))
+  const references = [...sources.values()]
+  for (let start = 0; start < references.length; start += 10) {
+    const batch = references.slice(start, start + 10)
+    const pages = [...new Set(batch.map(reference => reference.page))].map(number => originalPages.get(number))
+    validateContentBlocks({ pages }, batch.map(reference => ({
+      type: 'paragraph', text: '引用目录校验', references: [reference],
+    })), 'source-preflight')
   }
   function resolveReference(ref, location) {
     if (!record(ref)) invalid('引用格式无效。', location)

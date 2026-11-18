@@ -49,6 +49,10 @@ test('generates only after factual review and uses current provider selection fo
   assert.match(calls[0].system, /当前阶段：教学设计/)
   assert.match(calls[1].system, /当前阶段：完整讲解/)
   assert.match(calls[2].system, /事实与教学验收/)
+  const numericAudit = JSON.parse(calls[2].messages[0].content[0].text.split('服务端重算的计算结果（只核对所给参数，不代表实际运行论文模型）：\n')[1].split('\n')[0])
+  assert.deepEqual(numericAudit[0].inputs, [{ id: 'correct', value: 16 }, { id: 'total', value: 20 }])
+  assert.equal(numericAudit[0].value, 80)
+  assert.equal(numericAudit[0].display, '80.0')
 })
 
 test('review failure gets one revision and never publishes twice-rejected drafts', async () => {
@@ -153,6 +157,31 @@ test('structured factual review issues repair only the specified chapter and sti
   assert.equal(result.chapters[6].blocks[0].text, repaired.chapters[6].blocks[0].text)
 })
 
+test('source-format repair does not consume the content revision and both revised drafts are checked', async () => {
+  const first = sourceDraft(), fixed = sourceDraft(), calls = []
+  first.chapters[0].blocks[0].text = '已核对的任务描述必须保留。'
+  first.chapters[2].blocks[0].references[0].sourceId = 'p99-s99'
+  fixed.chapters[6].blocks[0].text = '补全同条件的对照观察，并限定结论范围。'
+  const issue = { approved: false, issues: [{ chapterId: 'analysis', message: '缺少核心对照的实际观察' }] }
+  const result = await generateExplanation(model([first, { chapters: [sourceDraft().chapters[2]] }, issue,
+    { chapters: [fixed.chapters[6]] }, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
+  assert.equal(calls.length, 6)
+  assert.match(calls[2].messages[0].content[0].text, /"id":"baselines"/)
+  assert.match(calls[4].messages[0].content[0].text, /缺少核心对照的实际观察/)
+  assert.equal(result.chapters[0].blocks[0].text, first.chapters[0].blocks[0].text)
+  assert.equal(result.chapters[6].blocks[0].text, fixed.chapters[6].blocks[0].text)
+})
+
+test('combined repair paths still reject a twice-rejected lesson without publishing it', async () => {
+  const first = sourceDraft(), issue = { approved: false, issues: [{ chapterId: 'analysis', message: '仍缺实际对照' }] }
+  first.chapters[2].blocks[0].references[0].sourceId = 'p99-s99'
+  const calls = []
+  await assert.rejects(generateExplanation(model([first, { chapters: [sourceDraft().chapters[2]] }, issue,
+    { chapters: [sourceDraft().chapters[6]] }, issue], options => calls.push(options)), { model: 'test' }, paper),
+  error => error.code === 'explanation-review-failed')
+  assert.equal(calls.length, 6)
+})
+
 test('a malformed review is retried once without discarding or rewriting the completed lesson', async () => {
   const calls = []
   const result = await generateExplanation(model([draft(), { raw: '{' }, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
@@ -167,13 +196,45 @@ test('the teaching plan must be implemented as explanations and complementary vi
   const first = draft()
   first.chapters[1].blocks = first.chapters[1].blocks.filter(block => block.type !== 'terms')
   first.chapters[3].blocks = first.chapters[3].blocks.filter(block => block.type !== 'diagram')
-  const patch = { chapters: draft().chapters.filter(chapter => ['task', 'method'].includes(chapter.id)) }
   const calls = []
-  const result = await generateExplanation(model([first, patch, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
+  const result = await generateExplanation(model([first, draft(), { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
   assert.equal(calls.length, 4)
   assert.match(calls[2].messages[0].content[0].text, /重点术语/)
   assert.match(calls[2].messages[0].content[0].text, /diagram/)
+  assert.match(calls[2].messages[0].content[0].text, /全篇约束/)
+  assert.match(calls[2].messages[0].content[0].text, /上一版讲解/)
+  assert.doesNotMatch(calls[2].messages[0].content[0].text, /本次是定向章节修复/)
   assert.equal(result.chapters[1].blocks.find(block => block.type === 'terms').items.length, 5)
+})
+
+test('necessary definitions beyond the suggested count reach factual review instead of an impossible task-only repair', async () => {
+  const value = draft(), termBlock = value.chapters[1].blocks.find(block => block.type === 'terms')
+  const additional = structuredClone(termBlock)
+  additional.items = additional.items.slice(0, 4).map((item, index) => ({ ...item, term: '前置概念 ' + (index + 1) }))
+  value.chapters[1].blocks = value.chapters[1].blocks.filter(block => block.type !== 'terms')
+  value.chapters[3].blocks.push({ ...termBlock, items: [...termBlock.items, ...additional.items] })
+  const calls = []
+  const result = await generateExplanation(model([value, { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
+  assert.equal(calls.length, 3)
+  assert.match(calls[2].system, /事实与教学验收/)
+  assert.equal(result.chapters.flatMap(chapter => chapter.blocks).filter(block => block.type === 'terms').flatMap(block => block.items).length, 9)
+  const tooFew = draft()
+  tooFew.chapters[1].blocks.find(block => block.type === 'terms').items.length = 2
+  assert.throws(() => validateExplanation(paper, tooFew, undefined, undefined, { version: 4 }), /当前 2 个/)
+})
+
+test('complete structural repair receives both local source errors and every collected global failure', async () => {
+  const first = sourceDraft(), calls = []
+  first.chapters[2].blocks[0].references[0].sourceId = 'p99-s99'
+  first.chapters[1].blocks.find(block => block.type === 'terms').items.length = 2
+  const result = await generateExplanation(model([first, sourceDraft(), { approved: true, issues: [] }], options => calls.push(options)), { model: 'test' }, paper)
+  assert.equal(calls.length, 4)
+  assert.match(calls[2].messages[0].content[0].text, /当前 2 个/)
+  assert.match(calls[2].messages[0].content[0].text, /p99-s99/)
+  assert.match(calls[2].messages[0].content[0].text, /上次结构校验发现的问题/)
+  assert.match(calls[2].messages[0].content[0].text, /上一版讲解/)
+  assert.doesNotMatch(calls[2].messages[0].content[0].text, /本次是定向章节修复/)
+  assert.equal(result.chapters.length, 7)
 })
 
 test('legacy evidence comparisons can explain baseline execution without an obligatory table', () => {
@@ -278,4 +339,17 @@ test('invalid case structure requests one complete repair instead of an empty ch
   assert.equal(result.version, 4)
   assert.match(calls[2].messages[0].content[0].text, /重新输出完整/)
   assert.doesNotMatch(calls[2].messages[0].content[0].text, /本次是定向章节修复/)
+})
+
+test('compact plans allow a faithful comparison table instead of an inapplicable fixed-budget widget', () => {
+  const value = draft(), plan = teachingPlanFixture()
+  const setup = value.chapters.find(chapter => chapter.id === 'setup')
+  setup.blocks = setup.blocks.filter(block => block.type !== 'calculation')
+  plan.visuals = plan.visuals.map(visual => visual.chapterId === 'setup'
+    ? { type: 'evidence', chapterId: 'setup', question: '两种方法的评测输入与共同条件是什么？' } : visual)
+  const result = validateExplanation(paper, value, undefined, plan, { version: 4 })
+  assert(result.chapters.find(chapter => chapter.id === 'setup').blocks.some(block => block.type === 'table'))
+  const missing = structuredClone(value)
+  missing.chapters.find(chapter => chapter.id === 'setup').blocks = [setup.blocks.find(block => block.type === 'paragraph')]
+  assert.throws(() => validateExplanation(paper, missing, undefined, plan, { version: 4 }), /落实教学设计/)
 })

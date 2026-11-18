@@ -101,3 +101,33 @@ test('empty and unquotably short pages have no source IDs and cannot borrow evid
   assert.throws(() => catalog.resolveReference({ sourceId: 'p1-s1' }), invalid)
   assert.equal(catalog.resolveReference({ sourceId: 'p3-s1' }).page, 3)
 })
+
+test('catalog keeps immutable raw PDF quotes but presents no forbidden controls or joined numbers to the model', () => {
+  const controls = [...Array(32).keys()].filter(code => ![9, 10, 13].includes(code)).concat(127).map(code => String.fromCharCode(code))
+  const original = controls.map((control, index) => `Observation ${index}: the source supplies readable context; values are 12${control}34 and an independent quantity.\n`).join('').repeat(2)
+  const paper = { pages: [{ number: 7, text: original }] }, before = structuredClone(paper)
+  const catalog = createEvidenceCatalog(paper), sourceIds = ids(catalog)
+  assert(sourceIds.length > 10, 'the preflight validates multiple batches')
+  assert(!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(catalog.text))
+  assert(catalog.text.includes('12 34'), 'the model sees a separator rather than a fabricated 1234')
+  assert(!catalog.text.includes('1234'))
+  assert.equal(createEvidenceCatalog(paper).text, catalog.text)
+  for (const sourceId of sourceIds) {
+    const reference = catalog.resolveReference({ sourceId })
+    assert(original.includes(reference.quote))
+    assert.equal(validateContentBlocks(paper, [{ type: 'paragraph', text: '可核对的记录。', references: [reference] }])[0].references[0].quote, reference.quote)
+    const originalQuote = reference.quote; reference.quote = 'mutated outside the catalog'
+    assert.equal(catalog.resolveReference({ sourceId }).quote, originalQuote)
+  }
+  assert.deepEqual(paper, before)
+})
+
+test('catalog omits control-only pages and fails locally when no readable source can be offered', () => {
+  for (const text of ['', '42', '\u0001'.repeat(100), 'abcdefg' + '\u007f'.repeat(100)]) {
+    assert.throws(() => createEvidenceCatalog({ pages: [{ number: 1, text }] }), /没有可用于引用的可读文字/)
+  }
+  const catalog = createEvidenceCatalog({ pages: [{ number: 1, text: '\u0001'.repeat(100) },
+    { number: 2, text: 'A readable physical page supplies a complete grounded observation.' }] })
+  assert.deepEqual(ids(catalog), ['p2-s1'])
+  assert(!catalog.text.includes('\u0001'))
+})

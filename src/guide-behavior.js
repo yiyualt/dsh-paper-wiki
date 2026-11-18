@@ -60,6 +60,13 @@
       else link.removeAttribute('aria-current')
     }
   }
+  function selectTableGroup(id, rawIndex) {
+    if (!/^[0-3]$/.test(rawIndex ?? '')) return
+    const group = document.getElementById(id), index = Number(rawIndex), count = Number(group?.dataset.tableGroupCount)
+    if (!group || !Number.isInteger(count) || count < 2 || count > 4 || index >= count) return
+    for (const row of group.querySelectorAll('[data-table-group]')) row.hidden = Number(row.dataset.tableGroup) !== index
+    for (const button of group.querySelectorAll('[data-action="table-group"]')) button.setAttribute('aria-pressed', String(Number(button.dataset.index) === index))
+  }
   function stat(label, value, description) {
     const node = make('div', 'pg-stat')
     node.append(make('span', '', label), make('strong', '', value), make('small', '', description))
@@ -110,14 +117,15 @@
     }
     for (const edge of group.querySelectorAll('[data-edge]')) edge.setAttribute('data-active', String(activeEdges.has(edge.dataset.edge.slice(id.length + 1))))
     for (const button of group.querySelectorAll('[data-action="diagram-step"]')) button.setAttribute('aria-pressed', String(Number(button.dataset.index) === index))
-    const selected = block.nodes.find(node => node.id === nodeId), explanation = find('[data-diagram-explanation="' + id + '"]')
-    if (explanation) explanation.textContent = selected ? selected.label + '：' + selected.detail : step?.explanation || ''
+    const explanation = find('[data-diagram-explanation="' + id + '"]')
+    if (explanation) explanation.textContent = describePaperGuideDiagram(block, index, nodeId)
     group.setAttribute('data-step', String(index))
   }
   document.addEventListener('click', event => {
     const button = event.target?.closest?.('[data-action]'); if (!button) return
     const action = button.dataset.action, id = button.dataset.block
     if (action === 'case-stage') selectStage(Number(button.dataset.index))
+    else if (action === 'table-group') selectTableGroup(id, button.dataset.index)
     else if (action === 'code-line') {
       const line = Number(button.dataset.line), step = data.steps[stage]
       const code = find('[data-case-code]'), scrollTop = code?.scrollTop, scrollLeft = code?.scrollLeft
