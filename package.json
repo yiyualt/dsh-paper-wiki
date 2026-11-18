@@ -1,0 +1,21 @@
+{
+  "name": "dsh-paper-wiki",
+  "version": "0.1.2",
+  "description": "论文百科：读取本地 PDF 并生成带页码依据的中文讲解，适用于 DeepSeek Harness。",
+  "type": "module",
+  "engines": { "node": ">=22.13.0" },
+  "exports": { ".": "./index.js", "./client": "./client.js", "./package.json": "./package.json" },
+  "files": ["index.js", "client.js", "cordis.patch.yml", "src/paper-source.js", "src/paper-storage.js", "src/paper-explanation.js", "src/configured-model.js", "src/model-response.js", "THIRD_PARTY_NOTICES.md"],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prepack": "npm run build",
+    "test": "node --test",
+    "check:package": "node scripts/check-package.mjs",
+    "check": "npm test && npm run build && npm run check:package"
+  },
+  "dependencies": { "pdfjs-dist": "6.5.438" },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": { "platform": "web", "inject": ["@deepseek-ai/dsh-client-ui-layout", "@deepseek-ai/dsh-client-ui-sidebar", "@deepseek-ai/dsh-client-ui-workspace"] }
+  }
+}
