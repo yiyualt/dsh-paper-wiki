@@ -1,6 +1,6 @@
 {
   "name": "dsh-paper-wiki",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "论文百科：读取本地 PDF 并生成带页码依据的中文讲解，适用于 DeepSeek Harness。",
   "type": "module",
   "engines": {

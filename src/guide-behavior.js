@@ -17,19 +17,7 @@
   const calculations = new Map(list(data.calculations).map(block => [block.id, block]))
   const diagrams = new Map(list(data.diagrams).map(block => [block.id, block]))
   const chosen = new Map(), calculationInputs = new Map()
-  const interactiveState = { evidence: {}, calculations: {}, diagrams: {} }
-  let stage = 0, hasInteraction = false
-  function renderLiveState() {
-    const output = find('[data-live-code]'), panel = find('[data-live-panel]')
-    if (!output || !panel) return
-    panel.hidden = !hasInteraction
-    if (!hasInteraction) return
-    const current = { case_stage: data.steps[stage]?.label }
-    for (const key of ['evidence', 'calculations', 'diagrams']) {
-      if (Object.keys(interactiveState[key]).length) current[key] = interactiveState[key]
-    }
-    output.textContent = JSON.stringify({ interactive_state: current }, null, 2)
-  }
+  let stage = 0
   function appendSourceLine(parent, source, language) {
     if (language !== 'json') { parent.textContent = source || ' '; return }
     const pattern = /"(?:\\.|[^"\\])*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b|[{}\[\],:]/g
@@ -46,26 +34,27 @@
   function renderCase() {
     const step = data.steps[stage], code = find('[data-case-code]'), explanation = find('[data-case-explanation]')
     if (!step || !code) return
+    const scrollTop = code.scrollTop, scrollLeft = code.scrollLeft
     const lines = step.code.split('\n').map((source, index) => {
-      const line = make('button', 'pg-line')
-      line.setAttribute('type', 'button'); line.setAttribute('data-action', 'code-line'); line.setAttribute('data-line', String(index + 1)); line.setAttribute('aria-pressed', 'false')
+      const annotated = list(step.annotations).some(annotation => annotation.line === index + 1)
+      const line = make(annotated ? 'button' : 'div', annotated ? 'pg-line pg-line-annotated' : 'pg-line')
+      if (annotated) {
+        line.setAttribute('type', 'button'); line.setAttribute('data-action', 'code-line'); line.setAttribute('data-line', String(index + 1)); line.setAttribute('aria-pressed', 'false')
+      }
       line.append(make('span', 'pg-line-no', index + 1))
       const text = make('span', 'pg-source'); appendSourceLine(text, source, step.language); line.append(text)
       return line
     })
     code.replaceChildren(...lines)
+    code.scrollTop = scrollTop; code.scrollLeft = scrollLeft
     if (explanation) explanation.textContent = step.explanation
     for (const button of all('[data-action="case-stage"]')) button.setAttribute('aria-pressed', String(Number(button.dataset.index) === stage))
-    renderLiveState()
   }
-  function selectStage(index, scroll = false) {
+  function selectStage(index) {
     if (!Number.isInteger(index) || index < 0 || index >= data.steps.length) return
     stage = index; renderCase()
-    if (scroll) document.getElementById('chapter-' + data.steps[stage].chapterId)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   }
   function selectChapter(chapterId) {
-    const index = data.steps.findIndex(step => step.chapterId === chapterId)
-    if (index >= 0 && index !== stage) selectStage(index)
     for (const link of all('[data-action="nav-chapter"]')) {
       if (link.dataset.chapter === chapterId) link.setAttribute('aria-current', 'location')
       else link.removeAttribute('aria-current')
@@ -76,7 +65,7 @@
     node.append(make('span', '', label), make('strong', '', value), make('small', '', description))
     return node
   }
-  function renderEvidence(id, interaction = false) {
+  function renderEvidence(id) {
     const block = evidence.get(id); if (!block) return
     const selected = chosen.get(id) || new Set(list(block.states[0]?.ids))
     chosen.set(id, selected)
@@ -97,13 +86,8 @@
       const ids = list(block.states[Number(button.dataset.index)]?.ids)
       button.setAttribute('aria-pressed', String(ids.length === selected.size && ids.every(key => selected.has(key))))
     }
-    if (interaction) {
-      hasInteraction = true
-      interactiveState.evidence[id] = { title: block.title, selected: [...selected], budget: block.budget, covered: [...covered], missing, within_budget: !overBudget }
-      selectChapter(block.chapterId); renderLiveState()
-    }
   }
-  function renderCalculation(id, interaction = false) {
+  function renderCalculation(id) {
     const group = calculations.get(id); if (!group) return
     const overrides = calculationInputs.get(id) || {}, block = group.block
     calculationInputs.set(id, overrides)
@@ -117,13 +101,8 @@
       const shown = find('[data-input-value="' + id + ':' + input.id + '"]'); if (shown) shown.textContent = String(value)
       const range = all('[data-calc-input="' + id + '"]').find(node => node.dataset.input === input.id); if (range) range.value = String(value)
     }
-    if (interaction) {
-      hasInteraction = true
-      interactiveState.calculations[id] = { title: group.title, inputs: Object.fromEntries(block.inputs.map(input => [input.id, Object.hasOwn(overrides, input.id) ? overrides[input.id] : input.value])), result: error ? null : result, ...(error ? { error } : {}) }
-      selectChapter(group.chapterId); renderLiveState()
-    }
   }
-  function renderDiagram(id, index = 0, nodeId, interaction = false) {
+  function renderDiagram(id, index = 0, nodeId) {
     const block = diagrams.get(id), group = document.getElementById(id); if (!block || !group) return
     const step = block.steps[index] || block.steps[0], activeNodes = new Set(list(step?.activeNodes)), activeEdges = new Set(list(step?.activeEdges))
     for (const node of group.querySelectorAll('[data-action="diagram-node"]')) {
@@ -134,32 +113,30 @@
     const selected = block.nodes.find(node => node.id === nodeId), explanation = find('[data-diagram-explanation="' + id + '"]')
     if (explanation) explanation.textContent = selected ? selected.label + '：' + selected.detail : step?.explanation || ''
     group.setAttribute('data-step', String(index))
-    if (interaction) {
-      hasInteraction = true; interactiveState.diagrams[id] = { title: block.title, step: step?.label, active_nodes: [...activeNodes], active_edges: [...activeEdges], ...(selected ? { selected_node: selected.id } : {}) }
-      selectChapter(block.chapterId); renderLiveState()
-    }
   }
   document.addEventListener('click', event => {
     const button = event.target?.closest?.('[data-action]'); if (!button) return
     const action = button.dataset.action, id = button.dataset.block
-    if (action === 'case-stage') selectStage(Number(button.dataset.index), true)
+    if (action === 'case-stage') selectStage(Number(button.dataset.index))
     else if (action === 'code-line') {
       const line = Number(button.dataset.line), step = data.steps[stage]
+      const code = find('[data-case-code]'), scrollTop = code?.scrollTop, scrollLeft = code?.scrollLeft
       for (const row of all('[data-action="code-line"]')) row.setAttribute('aria-pressed', String(row === button))
       const annotation = list(step.annotations).find(item => item.line === line), output = find('[data-case-explanation]')
       if (output) output.textContent = annotation?.explanation || step.explanation
+      if (code) { code.scrollTop = scrollTop; code.scrollLeft = scrollLeft }
     } else if (action === 'nav-chapter') {
       event.preventDefault()
       selectChapter(button.dataset.chapter)
       document.getElementById('chapter-' + button.dataset.chapter)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
     }
-    else if (action === 'case-chapter') { selectChapter(button.dataset.chapter); find('.pg-left')?.scrollIntoView({ block: 'start', behavior: 'smooth' }) }
+    else if (action === 'case-chapter') find('.pg-left')?.scrollIntoView({ block: 'start', behavior: 'smooth' })
     else if (action === 'evidence-preset') {
       const block = evidence.get(id), preset = block?.states[Number(button.dataset.index)]
-      if (preset) { chosen.set(id, new Set(preset.ids)); renderEvidence(id, true) }
-    } else if (action === 'calculation-reset') { calculationInputs.set(id, {}); renderCalculation(id, true) }
-    else if (action === 'diagram-step') renderDiagram(id, Number(button.dataset.index), undefined, true)
-    else if (action === 'diagram-node') renderDiagram(id, Number(document.getElementById(id)?.dataset.step || 0), button.dataset.node, true)
+      if (preset) { chosen.set(id, new Set(preset.ids)); renderEvidence(id) }
+    } else if (action === 'calculation-reset') { calculationInputs.set(id, {}); renderCalculation(id) }
+    else if (action === 'diagram-step') renderDiagram(id, Number(button.dataset.index))
+    else if (action === 'diagram-node') renderDiagram(id, Number(document.getElementById(id)?.dataset.step || 0), button.dataset.node)
   })
   document.addEventListener('input', event => {
     const input = event.target
@@ -168,18 +145,18 @@
       if (!block || !block.items.some(item => item.id === input.value)) return
       const selected = chosen.get(id) || new Set()
       if (input.checked) selected.add(input.value); else selected.delete(input.value)
-      chosen.set(id, selected); renderEvidence(id, true)
+      chosen.set(id, selected); renderEvidence(id)
     } else if (input?.dataset?.calcInput) {
       const id = input.dataset.calcInput, group = calculations.get(id), variable = group?.block.inputs.find(item => item.id === input.dataset.input)
       if (!variable || group.block.mode !== 'illustrative' || !Object.hasOwn(variable, 'min')) return
       const numeric = input.value.trim() ? Number(input.value) : NaN
-      calculationInputs.set(id, { ...(calculationInputs.get(id) || {}), [variable.id]: numeric }); renderCalculation(id, true)
+      calculationInputs.set(id, { ...(calculationInputs.get(id) || {}), [variable.id]: numeric }); renderCalculation(id)
     }
   })
   document.addEventListener('keydown', event => {
     const target = event.target?.closest?.('[data-action="diagram-node"]')
     if (target && ['Enter', ' '].includes(event.key)) {
-      event.preventDefault(); renderDiagram(target.dataset.block, Number(document.getElementById(target.dataset.block)?.dataset.step || 0), target.dataset.node, true)
+      event.preventDefault(); renderDiagram(target.dataset.block, Number(document.getElementById(target.dataset.block)?.dataset.step || 0), target.dataset.node)
     }
   })
   renderCase()

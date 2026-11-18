@@ -45,60 +45,98 @@ test('renders the reference reading structure with an actual case and folded exp
   assert.throws(() => createPaperGuideHtml({ explanation: { version: 3 } }), TypeError)
 })
 
-test('case stages and line explanations operate in the offline DOM without altering original code', () => {
+function assertNoReadingScroll(document) {
+  for (const id of ['chapter-overview', 'chapter-baselines', 'chapter-method', 'chapter-results']) assert.equal(document.getElementById(id)?.scrolled, undefined)
+  assert.equal(document.querySelector('.pg-left').scrolled, undefined)
+}
+
+function caseSnapshot(document) {
+  return {
+    code: document.querySelector('[data-case-code]').textContent,
+    text: document.querySelector('[data-case-explanation]').textContent,
+    stage: document.querySelectorAll('[data-action="case-stage"]').map(button => button.getAttribute('aria-pressed')),
+  }
+}
+
+test('annotated lines update in place while ordinary code remains selectable text', () => {
   const { document, events } = run(render(fixture()))
+  const code = document.querySelector('[data-case-code]')
+  code.scrollTop = 32; code.scrollLeft = 17
   assert.equal(document.querySelector('[data-case-explanation]').textContent, '两个位置需要覆盖两种关系。')
-  events.click({ target: document.querySelectorAll('[data-action="code-line"]')[1] })
+  const rows = document.querySelectorAll('.pg-line')
+  assert.equal(rows[0].tagName, 'div')
+  assert.equal(rows[0].getAttribute('data-action'), null)
+  assert.equal(document.querySelectorAll('[data-action="code-line"]').length, 1)
+  const annotated = document.querySelector('[data-action="code-line"]')
+  assert.equal(annotated.getAttribute('data-line'), '2')
+  assert(annotated.className.includes('pg-line-annotated'))
+  events.click({ target: annotated })
   assert.equal(document.querySelector('[data-case-explanation]').textContent, '查询同时要求处理方式和适用限制。')
-  const button = document.querySelectorAll('[data-action="case-stage"]').find(node => node.dataset.index === '1')
-  events.click({ target: button })
-  assert.equal(button.getAttribute('aria-pressed'), 'true')
-  assert(document.querySelector('[data-case-code]').textContent.includes('"selected":["a","c"]'))
-  assert(document.getElementById('chapter-method').scrolled)
-  assert.equal(document.querySelector('[data-live-panel]').hidden, true)
+  assert.equal(annotated.getAttribute('aria-pressed'), 'true')
+  assert.equal(code.scrollTop, 32)
+  assert.equal(code.scrollLeft, 17)
+  const before = caseSnapshot(document)
+  events.click({ target: rows[0] })
+  assert.deepEqual(caseSnapshot(document), before)
+  assertNoReadingScroll(document)
 })
 
-test('checkbox selection, presets, constraints and coverage update the same live code state', () => {
+test('stage buttons and file tabs switch the case without navigating the document', () => {
   const { document, events } = run(render(fixture()))
+  const code = document.querySelector('[data-case-code]')
+  code.scrollTop = 32; code.scrollLeft = 17
+  const secondStage = document.querySelectorAll('[data-action="case-stage"]').find(node => node.dataset.index === '1')
+  events.click({ target: secondStage })
+  assert.equal(secondStage.getAttribute('aria-pressed'), 'true')
+  assert(code.textContent.includes('"selected":["a","c"]'))
+  assert.equal(code.scrollTop, 32)
+  assert.equal(code.scrollLeft, 17)
+  const firstFile = document.querySelector('.pg-tabs').querySelectorAll('[data-action="case-stage"]').find(node => node.dataset.index === '0')
+  events.click({ target: firstFile })
+  assert.equal(firstFile.getAttribute('aria-pressed'), 'true')
+  assert(code.textContent.includes('处理方式与限制'))
+  assertNoReadingScroll(document)
+  assert.equal(document.querySelector('[data-live-panel]'), null)
+})
+
+test('checkbox selection and presets calculate budget and coverage locally without changing the case', () => {
+  const { document, events } = run(render(fixture()))
+  events.click({ target: document.querySelectorAll('[data-action="case-stage"]').find(node => node.dataset.index === '1') })
+  const before = caseSnapshot(document)
   const checkbox = document.querySelectorAll('[data-evidence-input]').find(node => node.value === 'c')
   checkbox.checked = true; events.input({ target: checkbox })
   assert.equal(document.querySelector('[data-evidence-verdict]').getAttribute('data-status'), 'over-budget')
-  let live = JSON.parse(document.querySelector('[data-live-code]').textContent).interactive_state
-  assert.deepEqual(live.evidence['guide-1-0'].selected, ['a', 'b', 'c'])
-  assert.equal(live.evidence['guide-1-0'].within_budget, false)
+  assert(document.querySelector('[data-evidence-stats]').textContent.includes('3 / 2'))
+  assert(document.querySelector('[data-evidence-stats]').textContent.includes('2 / 2'))
   const preset = document.querySelectorAll('[data-action="evidence-preset"]')[1]
   events.click({ target: preset })
-  live = JSON.parse(document.querySelector('[data-live-code]').textContent).interactive_state
-  assert.deepEqual(live.evidence['guide-1-0'].selected, ['a', 'c'])
-  assert.deepEqual(live.evidence['guide-1-0'].missing, [])
-  assert.equal(live.evidence['guide-1-0'].within_budget, true)
   assert.equal(document.querySelector('[data-evidence-verdict]').getAttribute('data-status'), 'covered')
-  assert.equal(document.querySelector('[data-live-panel]').hidden, false)
-  assert(document.querySelector('[data-case-code]').textContent.includes('处理方式与限制'), 'static input remains intact')
+  assert.deepEqual(document.querySelectorAll('[data-evidence-input]').filter(node => node.checked).map(node => node.value), ['a', 'c'])
+  assert(document.querySelector('[data-evidence-stats]').textContent.includes('已覆盖全部所需关系'))
+  assert.deepEqual(caseSnapshot(document), before)
+  assertNoReadingScroll(document)
 })
 
-test('formula recomputation synchronizes the relevant case stage and preserves previous evidence state', () => {
+test('formula inputs and reset only change their own numeric result and retain the selected case and evidence', () => {
   const { document, events } = run(render(fixture()))
   events.click({ target: document.querySelectorAll('[data-action="evidence-preset"]')[1] })
+  const before = caseSnapshot(document)
   const slider = document.querySelector('[data-calc-input]'); slider.value = '7'; events.input({ target: slider })
   assert.equal(document.querySelector('[data-calc-result]').textContent, '10.00')
-  let live = JSON.parse(document.querySelector('[data-live-code]').textContent).interactive_state
-  assert.equal(live.case_stage, '补全证据')
-  assert.equal(live.calculations['guide-2-0'].inputs.a, 7)
-  assert.equal(live.calculations['guide-2-0'].result, 10)
-  assert.deepEqual(live.evidence['guide-1-0'].selected, ['a', 'c'])
-  assert(document.querySelector('[data-case-code]').textContent.includes('"selected":["a","c"]'))
+  assert.equal(document.querySelector('[data-input-value]').textContent, '7')
+  assert.deepEqual(document.querySelectorAll('[data-evidence-input]').filter(node => node.checked).map(node => node.value), ['a', 'c'])
   slider.value = '999'; events.input({ target: slider })
   assert.equal(document.querySelector('[data-calc-result]').getAttribute('data-error'), 'true')
-  live = JSON.parse(document.querySelector('[data-live-code]').textContent).interactive_state
-  assert.equal(live.calculations['guide-2-0'].result, null)
   events.click({ target: document.querySelector('[data-action="calculation-reset"]') })
   assert.equal(document.querySelector('[data-calc-result]').textContent, '5.50')
   assert.equal(slider.value, '2.5')
+  assert.deepEqual(caseSnapshot(document), before)
+  assertNoReadingScroll(document)
 })
 
-test('diagram steps and keyboard node selection show only the selected explanation and real active edges', () => {
+test('diagram steps and keyboard node selection update their own graph without moving or changing the case', () => {
   const { document, events } = run(render(fixture()))
+  const before = caseSnapshot(document)
   events.click({ target: document.querySelectorAll('[data-action="diagram-step"]')[1] })
   assert.equal(document.querySelector('[data-edge]').getAttribute('data-active'), 'true')
   assert.equal(document.querySelector('[data-diagram-explanation]').textContent, '将候选加入输出。')
@@ -106,9 +144,9 @@ test('diagram steps and keyboard node selection show only the selected explanati
   events.keydown({ target: document.querySelectorAll('[data-action="diagram-node"]')[1], key: ' ', preventDefault() { prevented = true } })
   assert(prevented)
   assert.equal(document.querySelector('[data-diagram-explanation]').textContent, '选择结果：保留a和c。')
-  const live = JSON.parse(document.querySelector('[data-live-code]').textContent).interactive_state
-  assert.deepEqual(live.diagrams['guide-2-1'].active_edges, ['e1'])
-  assert.equal(live.diagrams['guide-2-1'].selected_node, 'n2')
+  assert.equal(document.querySelectorAll('[data-action="diagram-node"]')[1].getAttribute('aria-pressed'), 'true')
+  assert.deepEqual(caseSnapshot(document), before)
+  assertNoReadingScroll(document)
 })
 
 test('hostile model strings stay inert and private archive fields never enter script payloads', () => {
@@ -131,7 +169,7 @@ test('hostile model strings stay inert and private archive fields never enter sc
 
 class Element {
   constructor(tag, attributes = {}) {
-    this.tagName = tag; this.attributes = {}; this.dataset = {}; this.children = []; this.parentElement = null; this.value = ''; this.checked = false; this.hidden = false; this._text = ''; this.className = ''
+    this.tagName = tag; this.attributes = {}; this.dataset = {}; this.children = []; this.parentElement = null; this.value = ''; this.checked = false; this.hidden = false; this._text = ''; this.className = ''; this.scrollTop = 0; this.scrollLeft = 0
     for (const [name, value] of Object.entries(attributes)) this.setAttribute(name, value)
   }
   setAttribute(name, value) {
@@ -191,7 +229,7 @@ test('an unavailable chapter keeps its evidence limitation visible instead of re
   assert(!render(paper).includes('<不补造数据>'))
 })
 
-test('chapter navigation scrolls within the guide and cancels iframe base-URL navigation', () => {
+test('chapter navigation scrolls within the guide without changing the case and cancels iframe base-URL navigation', () => {
   const { document, events } = run(render(fixture()))
   const link = document.querySelectorAll('[data-action="nav-chapter"]').find(node => node.dataset.chapter === 'method')
   let prevented = false
@@ -199,5 +237,5 @@ test('chapter navigation scrolls within the guide and cancels iframe base-URL na
   assert.equal(prevented, true, 'srcdoc fragments must not resolve to the parent app URL')
   assert(document.getElementById('chapter-method').scrolled)
   assert.equal(link.getAttribute('aria-current'), 'location')
-  assert(document.querySelector('[data-case-code]').textContent.includes('"selected":["a","c"]'))
+  assert(document.querySelector('[data-case-code]').textContent.includes('处理方式与限制'), 'explicit section navigation retains the selected case stage')
 })
